@@ -1,0 +1,17 @@
+{
+  "name": "@kenlens/shared",
+  "private": true,
+  "license": "Apache-2.0",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./brand": "./src/brand.ts",
+    "./disclaimer": "./src/disclaimer.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

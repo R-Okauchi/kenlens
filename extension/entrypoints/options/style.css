@@ -1,0 +1,30 @@
+@import 'tailwindcss';
+@import '../../assets/theme.css';
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-ink);
+  background: var(--color-surface-sunken);
+  margin: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #16191d;
+    color: #e7eaee;
+  }
+  .kl-page-card {
+    background: #1f242a !important;
+    border-color: #2c333b !important;
+  }
+  .kl-dark-soft {
+    color: #9aa4b2 !important;
+  }
+  .kl-dark-input {
+    background: #16191d !important;
+    border-color: #2c333b !important;
+    color: #e7eaee !important;
+  }
+}

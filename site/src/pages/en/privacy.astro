@@ -1,0 +1,87 @@
+---
+import Base from '../../layouts/Base.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+---
+
+<Base
+  lang="en"
+  title="Privacy Policy | KenLens — 研レンズ"
+  description="Privacy policy for the KenLens Chrome extension: what information is sent, what is stored locally, and what is never collected."
+>
+  <Header lang="en" path="privacy/" />
+  <main>
+    <article class="container prose">
+      <h1>Privacy Policy</h1>
+      <p class="effective-date">Effective date: June 2026</p>
+
+      <p>
+        KenLens (研レンズ, "the extension") is a Chrome extension that displays public
+        metadata on researcher pages of researchmap.jp. This policy explains what
+        information the extension handles.
+      </p>
+
+      <h2>Information that leaves your browser</h2>
+      <p>
+        The extension only communicates with external servers when needed to process
+        the researchmap page you are viewing. Specifically:
+      </p>
+      <ol>
+        <li>
+          When you view a researchmap researcher page, the extension sends the
+          profile permalink to api.researchmap.jp to fetch the publicly available
+          publication data.
+        </li>
+        <li>
+          For each publication, the extension sends the DOI — or, for DOI-less items
+          with Latin-script titles, the paper title, publication year, and the first
+          author's family name — to OpenAlex, Crossref, and Unpaywall to fetch public
+          metadata (citation counts, OA status, DOI candidates, and so on).
+        </li>
+      </ol>
+      <p>
+        No other information leaves your browser: no browsing history, no activity on
+        other websites, and no personally identifying information.
+      </p>
+
+      <h2>Information we never collect</h2>
+      <ul>
+        <li>No account or sign-in is required, and users are not identified.</li>
+        <li>No analytics are used.</li>
+        <li>Browsing history is never collected.</li>
+      </ul>
+
+      <h2>Information stored locally</h2>
+      <ul>
+        <li>
+          Responses from external APIs are cached inside your browser
+          (chrome.storage.local) to speed up display. Cache lifetimes range from
+          24 hours to 30 days depending on the content, and the cache can be cleared
+          at any time from the options page.
+        </li>
+        <li>
+          An optional, user-supplied OpenAlex API key is stored locally only and is
+          used solely for requests to OpenAlex. It is never sent anywhere else.
+        </li>
+      </ul>
+
+      <h2>Scope</h2>
+      <p>The extension runs only on researchmap.jp pages.</p>
+
+      <h2>Contact</h2>
+      <p>
+        For questions about this policy, please use
+        <a href="https://github.com/R-Okauchi/kenlens/issues" target="_blank" rel="noopener noreferrer">
+          GitHub Issues
+        </a>.
+      </p>
+
+      <h2>Changes to this policy</h2>
+      <p>
+        This policy may be updated from time to time. Significant changes will be
+        announced on this page.
+      </p>
+    </article>
+  </main>
+  <Footer lang="en" />
+</Base>

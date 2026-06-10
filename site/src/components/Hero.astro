@@ -1,0 +1,372 @@
+---
+// TAGLINE / DISCLAIMER mirrored verbatim from packages/shared/src/disclaimer.ts — keep in sync.
+const TAGLINE = {
+  ja: '業績が、見える。整う。つながる。',
+  en: 'See it. Tidy it. Connect it.',
+} as const;
+
+const DISCLAIMER = {
+  ja: '研究評価ではなく、公開メタデータの可視化・整備支援です。',
+  en: 'This is not research evaluation — it visualizes public metadata and supports profile maintenance.',
+} as const;
+
+interface Props {
+  lang: 'ja' | 'en';
+}
+
+const { lang } = Astro.props;
+
+// 日本語コピーは文節単位の span (inline-block) で折り返し位置を制御する
+const subPhrases =
+  lang === 'ja'
+    ? ['researchmapの研究者ページに、', '被引用数・OA・DOIを', 'その場で表示する', 'Chrome拡張です。']
+    : ['Shows citations, OA status, and DOIs', 'right on researchmap researcher pages.'];
+
+const t =
+  lang === 'ja'
+    ? {
+        cta: 'Chromeに追加 (近日公開)',
+        ctaSub: 'ソースコードを見る',
+        panelTitle: '論文',
+        papers: [
+          {
+            title: '都市河川流域における降雨流出特性の解析',
+            meta: '土木学会論文集 79(2)　2024年3月',
+            badges: 'rich',
+            note: '被引用数・OA本文・DOIへ、ページを離れずに。',
+          },
+          {
+            title: '地方都市における歴史的橋梁の保存に関する一考察',
+            meta: '○○大学紀要 12　2018年3月',
+            badges: 'hint',
+            note: '未登録のDOI候補を見つけたら、そっと提案。',
+          },
+          {
+            title: '河川構造物の維持管理に関する調査報告',
+            meta: '調査報告書　2015年',
+            badges: 'silent',
+            note: '外部DBに無い論文は、静かなまま。0で埋めることはしません。',
+          },
+        ],
+        hintLabel: 'DOI候補',
+      }
+    : {
+        cta: 'Add to Chrome (coming soon)',
+        ctaSub: 'View the source',
+        panelTitle: 'Published papers',
+        papers: [
+          {
+            title: 'Rainfall-runoff characteristics in urban river basins',
+            meta: 'Journal of JSCE 79(2)　Mar 2024',
+            badges: 'rich',
+            note: 'Citations, OA full text, and DOI — without leaving the page.',
+          },
+          {
+            title: 'On preserving historic bridges in regional cities',
+            meta: 'University Bulletin 12　Mar 2018',
+            badges: 'hint',
+            note: 'Found an unregistered DOI? A gentle suggestion appears.',
+          },
+          {
+            title: 'A survey report on river structure maintenance',
+            meta: 'Survey report　2015',
+            badges: 'silent',
+            note: 'Not in external databases? It stays quiet. No zeros, no warnings.',
+          },
+        ],
+        hintLabel: 'DOI found',
+      };
+---
+
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="copy">
+      <h1 class="tagline">{TAGLINE[lang]}</h1>
+      <p class="sub">
+        {subPhrases.map((ph) => <span class="ph">{ph}</span>)}
+      </p>
+      <p class="disclaimer">{DISCLAIMER[lang]}</p>
+      <div class="cta-row">
+        <!-- data-cws-link: replace href with the Chrome Web Store listing URL once published -->
+        <a class="cta" href="#" data-cws-link>{t.cta}</a>
+        <a
+          class="cta-sub"
+          href="https://github.com/R-Okauchi/kenlens"
+          target="_blank"
+          rel="noopener noreferrer">{t.ctaSub} ↗</a
+        >
+      </div>
+    </div>
+
+    <!-- researchmap (Bootstrap 3) パネルの実寸風モック。ホストページは常にライトテーマ -->
+    <figure class="mock" aria-label="researchmap page with KenLens badges (mock)">
+      <div class="rm-panel">
+        <div class="rm-panel-heading">
+          {t.panelTitle}
+          <span class="rm-count">3</span>
+        </div>
+        {
+          t.papers.map((p) => (
+            <div class="rm-item">
+              <p class="rm-title">{p.title}</p>
+              <p class="rm-meta">{p.meta}</p>
+              <div class="kl-badges">
+                <span class="kl-glyph" aria-hidden="true">
+                  <svg width="11" height="11" viewBox="0 0 12 12">
+                    <circle cx="5" cy="5" r="3.4" fill="none" stroke="#98a2b3" stroke-width="1.5" />
+                    <line x1="7.8" y1="7.8" x2="10.6" y2="10.6" stroke="#98a2b3" stroke-width="1.6" stroke-linecap="round" />
+                  </svg>
+                </span>
+                {p.badges === 'rich' && (
+                  <>
+                    <span class="kl-pill kl-cite">❝ 27</span>
+                    <span class="kl-pill kl-oa">OA</span>
+                    <span class="kl-pill kl-doi">DOI</span>
+                  </>
+                )}
+                {p.badges === 'hint' && <span class="kl-pill kl-hint">✎ {t.hintLabel}</span>}
+              </div>
+              <p class="kl-note">{p.note}</p>
+            </div>
+          ))
+        }
+      </div>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .hero {
+    border-bottom: 1px solid var(--border);
+    padding: 72px 0 64px;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    gap: 56px;
+    align-items: center;
+  }
+
+  .copy {
+    text-align: left;
+  }
+
+  .tagline {
+    font-size: 42px;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+    margin: 0 0 18px;
+  }
+
+  /* タグラインの前に置く短いブランドルール */
+  .tagline::before {
+    content: '';
+    display: block;
+    width: 44px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--gradient);
+    margin-bottom: 22px;
+  }
+
+  .sub {
+    font-size: 17px;
+    line-height: 1.9;
+    color: var(--ink-soft);
+    margin: 0 0 14px;
+  }
+
+  /* 文節単位でしか折り返さない (「表示す/る」のような途中改行を防ぐ) */
+  .ph {
+    display: inline-block;
+  }
+
+  .disclaimer {
+    font-size: 13px;
+    color: var(--brand-strong);
+    margin: 0 0 30px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .disclaimer {
+      color: #8ad6cc;
+    }
+  }
+
+  .cta-row {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+  }
+
+  .cta {
+    display: inline-block;
+    background: var(--gradient);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 13px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(15, 118, 110, 0.25);
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .cta:hover {
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(15, 118, 110, 0.3);
+  }
+
+  .cta-sub {
+    font-size: 14px;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ---- researchmap パネルのモック (固定ライト配色) ---- */
+  .mock {
+    margin: 0;
+  }
+
+  .rm-panel {
+    background: #ffffff;
+    border: 1px solid #dddddd;
+    border-radius: 6px;
+    box-shadow: 0 12px 32px rgba(16, 24, 40, 0.1);
+    overflow: hidden;
+    font-size: 13px;
+    text-align: left;
+  }
+
+  /* 拡張のサマリーカードと同じ、上辺のブランドグラデ */
+  .rm-panel::before {
+    content: '';
+    display: block;
+    height: 3px;
+    background: var(--gradient);
+  }
+
+  .rm-panel-heading {
+    padding: 9px 14px;
+    background: #f5f5f5;
+    border-bottom: 1px solid #dddddd;
+    color: #333333;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .rm-count {
+    display: inline-block;
+    background: #777777;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 1px 8px;
+    margin-left: 6px;
+    vertical-align: 1px;
+  }
+
+  .rm-item {
+    padding: 11px 14px 10px;
+    border-bottom: 1px solid #eeeeee;
+  }
+
+  .rm-item:last-child {
+    border-bottom: none;
+  }
+
+  .rm-title {
+    margin: 0 0 2px;
+    color: #337ab7; /* Bootstrap 3 のリンク青 (researchmap 実物に合わせる) */
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .rm-meta {
+    margin: 0 0 7px;
+    color: #777777;
+    font-size: 12px;
+  }
+
+  .kl-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .kl-glyph {
+    display: inline-flex;
+    opacity: 0.6;
+  }
+
+  .kl-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 9px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+
+  .kl-cite {
+    color: #0b5e57;
+    background: #e6f4f2;
+  }
+
+  .kl-oa {
+    color: #15693b;
+    background: #e7f6ec;
+  }
+
+  .kl-doi {
+    color: #3a5276;
+    background: #eef2f8;
+  }
+
+  .kl-hint {
+    color: #5d6b7e;
+    background: #f8fafc;
+    border: 1px dashed #8a94a4;
+  }
+
+  /* モック内の注釈 (ホストページの一部ではなく研レンズ側の説明) */
+  .kl-note {
+    margin: 7px 0 0;
+    padding-left: 10px;
+    border-left: 2px solid var(--brand-soft);
+    color: #5d6b7e;
+    font-size: 11.5px;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 860px) {
+    .hero {
+      padding: 48px 0 48px;
+    }
+
+    .hero-grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .tagline {
+      font-size: 30px;
+    }
+
+    .sub {
+      font-size: 15px;
+    }
+  }
+</style>

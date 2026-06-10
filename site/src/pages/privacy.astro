@@ -1,0 +1,85 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Base
+  lang="ja"
+  title="プライバシーポリシー | 研レンズ — KenLens"
+  description="Chrome拡張「研レンズ (KenLens)」のプライバシーポリシー。送信される情報、ローカルに保存される情報、収集しない情報について説明します。"
+>
+  <Header lang="ja" path="privacy/" />
+  <main>
+    <article class="container prose">
+      <h1>プライバシーポリシー</h1>
+      <p class="effective-date">施行日: 2026年6月</p>
+
+      <p>
+        研レンズ (KenLens、以下「本拡張機能」) は、researchmap.jp の研究者ページ上に
+        公開メタデータを表示するChrome拡張機能です。本ポリシーでは、本拡張機能が
+        どのような情報を扱うかを説明します。
+      </p>
+
+      <h2>ブラウザの外部に送信される情報</h2>
+      <p>
+        本拡張機能が外部のサーバーと通信するのは、閲覧中のresearchmapページの
+        処理に必要な場合に限られます。具体的には次の2つです。
+      </p>
+      <ol>
+        <li>
+          researchmapの研究者ページを表示すると、そのプロフィールのパーマリンクを
+          api.researchmap.jp に送信し、公開されている業績データを取得します。
+        </li>
+        <li>
+          業績のDOI、およびDOIが未登録で欧文タイトルの業績については
+          「タイトル・発行年・第一著者の姓」を、OpenAlex・Crossref・Unpaywall に送信し、
+          公開メタデータ (被引用数・OA状況・DOI候補など) を取得します。
+        </li>
+      </ol>
+      <p>
+        これら以外の情報 (閲覧履歴、他のウェブサイトの閲覧内容、個人を特定する情報など)
+        を外部に送信することはありません。
+      </p>
+
+      <h2>収集しない情報</h2>
+      <ul>
+        <li>アカウント登録・ログインは不要で、利用者の識別は行いません。</li>
+        <li>アクセス解析 (アナリティクス) は使用していません。</li>
+        <li>閲覧履歴の収集は行いません。</li>
+      </ul>
+
+      <h2>ローカルに保存される情報</h2>
+      <ul>
+        <li>
+          外部APIからの応答は、表示を速くするためにブラウザ内
+          (chrome.storage.local) にキャッシュされます。保存期間は内容に応じて
+          24時間〜30日で、オプションページからいつでも削除できます。
+        </li>
+        <li>
+          任意で設定できるOpenAlexのAPIキーは、ブラウザ内にのみ保存され、
+          OpenAlexへのリクエスト以外には使用されません。外部に送信されることはありません。
+        </li>
+      </ul>
+
+      <h2>動作範囲</h2>
+      <p>本拡張機能は researchmap.jp のページ上でのみ動作します。</p>
+
+      <h2>お問い合わせ</h2>
+      <p>
+        本ポリシーに関するご質問は
+        <a href="https://github.com/R-Okauchi/kenlens/issues" target="_blank" rel="noopener noreferrer">
+          GitHub Issues
+        </a>
+        までお願いします。
+      </p>
+
+      <h2>改定について</h2>
+      <p>
+        本ポリシーは改定されることがあります。重要な変更がある場合は、本ページで
+        お知らせします。
+      </p>
+    </article>
+  </main>
+  <Footer lang="ja" />
+</Base>

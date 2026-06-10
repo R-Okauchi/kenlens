@@ -1,0 +1,91 @@
+---
+// DISCLAIMER / DATA_CREDITS mirrored verbatim from packages/shared/src/disclaimer.ts — keep in sync.
+const DISCLAIMER = {
+  ja: '研究評価ではなく、公開メタデータの可視化・整備支援です。',
+  en: 'This is not research evaluation — it visualizes public metadata and supports profile maintenance.',
+} as const;
+
+const DATA_CREDITS = {
+  ja: 'データ: OpenAlex・Crossref・Unpaywall',
+  en: 'Data: OpenAlex, Crossref, Unpaywall',
+} as const;
+
+interface Props {
+  lang: 'ja' | 'en';
+}
+
+const { lang } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const privacyHref = lang === 'ja' ? `${base}privacy/` : `${base}en/privacy/`;
+
+const t =
+  lang === 'ja'
+    ? {
+        privacy: 'プライバシーポリシー',
+        contact: 'お問い合わせ (GitHub Issues)',
+      }
+    : {
+        privacy: 'Privacy Policy',
+        contact: 'Contact (GitHub Issues)',
+      };
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <nav class="links" aria-label={lang === 'ja' ? 'フッターナビゲーション' : 'Footer navigation'}>
+      <a href={privacyHref}>{t.privacy}</a>
+      <a href="https://github.com/R-Okauchi/kenlens/issues" target="_blank" rel="noopener noreferrer">
+        {t.contact}
+      </a>
+      <a href="https://github.com/R-Okauchi/kenlens" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </nav>
+    <p class="disclaimer">{DISCLAIMER[lang]}</p>
+    <p class="credits">{DATA_CREDITS[lang]}</p>
+    <p class="copyright">© 2026 KenLens</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 0 48px;
+    text-align: center;
+    background: var(--bg);
+  }
+
+  .links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 20px;
+  }
+
+  .links a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .links a:hover {
+    color: var(--brand);
+  }
+
+  .disclaimer {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+
+  .credits {
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-bottom: 16px;
+  }
+
+  .copyright {
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+</style>

@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+@import '../../assets/theme.css';
+
+:host {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-ink);
+}

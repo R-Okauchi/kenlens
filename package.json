@@ -1,0 +1,19 @@
+{
+  "name": "kenlens",
+  "private": true,
+  "license": "Apache-2.0",
+  "version": "0.1.0",
+  "description": "研レンズ (KenLens) — researchmapの業績ページに被引用数・OA・DOI情報を表示するブラウザ拡張",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "dev": "pnpm -F @kenlens/extension dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "zip": "pnpm -F @kenlens/extension zip",
+    "fixtures": "bash scripts/save-fixtures.sh"
+  }
+}

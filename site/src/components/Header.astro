@@ -1,0 +1,149 @@
+---
+interface Props {
+  lang: 'ja' | 'en';
+  /** locale-relative path of the current page ('' for home, 'privacy/' for the privacy page) */
+  path?: string;
+}
+
+const { lang, path = '' } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const home = lang === 'ja' ? base : `${base}en/`;
+const privacyHref = lang === 'ja' ? `${base}privacy/` : `${base}en/privacy/`;
+const jaHref = `${base}${path}`;
+const enHref = `${base}en/${path}`;
+
+const t =
+  lang === 'ja'
+    ? { features: '原則', privacy: 'プライバシー' }
+    : { features: 'Principles', privacy: 'Privacy' };
+---
+
+<header class="site-header">
+  <div class="container inner">
+    <a class="brand" href={home}>
+      <!-- KenLens logo (same artwork as public/favicon.svg) -->
+      <svg
+        width="28"
+        height="28"
+        viewBox="0 0 128 128"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <defs>
+          <linearGradient id="kenlens-header-g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#0D9488"></stop>
+            <stop offset="1" stop-color="#0EA5E9"></stop>
+          </linearGradient>
+        </defs>
+        <rect width="128" height="128" rx="28" fill="url(#kenlens-header-g)"></rect>
+        <circle cx="56" cy="56" r="26" fill="none" stroke="#FFFFFF" stroke-width="9"></circle>
+        <line x1="76" y1="76" x2="98" y2="98" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round"></line>
+        <line x1="46" y1="49" x2="67" y2="49" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"></line>
+        <line x1="46" y1="63" x2="60" y2="63" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"></line>
+      </svg>
+      <span class="brand-name">研レンズ<span class="brand-en">KenLens</span></span>
+    </a>
+
+    <nav class="nav" aria-label={lang === 'ja' ? 'メインナビゲーション' : 'Main navigation'}>
+      <a href={`${home}#principles`}>{t.features}</a>
+      <a href={privacyHref}>{t.privacy}</a>
+      <a href="https://github.com/R-Okauchi/kenlens" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <span class="lang-switch">
+        <a href={jaHref} aria-current={lang === 'ja' ? 'page' : undefined}>日本語</a>
+        <span class="sep" aria-hidden="true">/</span>
+        <a href={enHref} aria-current={lang === 'en' ? 'page' : undefined}>English</a>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 64px;
+    flex-wrap: wrap;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--ink);
+  }
+
+  .brand-name {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.02em;
+  }
+
+  .brand-en {
+    margin-left: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .nav > a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .nav > a:hover {
+    color: var(--brand);
+  }
+
+  .lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+
+  .lang-switch a {
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+
+  .lang-switch a[aria-current='page'] {
+    color: var(--brand);
+    font-weight: 700;
+  }
+
+  .sep {
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 720px) {
+    .inner {
+      justify-content: center;
+    }
+
+    .nav {
+      gap: 14px;
+    }
+  }
+</style>

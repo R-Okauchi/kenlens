@@ -1,0 +1,38 @@
+---
+import '../styles/global.css';
+
+// Tagline mirrored from packages/shared/src/disclaimer.ts (TAGLINE) — keep in sync.
+const TAGLINE = {
+  ja: '業績が、見える。整う。つながる。',
+  en: 'See it. Tidy it. Connect it.',
+} as const;
+
+interface Props {
+  lang: 'ja' | 'en';
+  title: string;
+  description: string;
+}
+
+const { lang, title, description } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content="研レンズ — KenLens" />
+    <meta property="og:description" content={TAGLINE[lang]} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="研レンズ — KenLens" />
+    <meta name="theme-color" content="#0F766E" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

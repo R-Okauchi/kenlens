@@ -1,0 +1,37 @@
+/**
+ * content script ↔ background SW のメッセージング契約。
+ * 全 fetch は background に集約する (レート制限・キャッシュ・ブレーカの単一窓口)。
+ * content script は ≤20 DOI ずつチャンク要求し逐次描画する。
+ */
+import { defineExtensionMessaging } from '@webext-core/messaging';
+import type {
+  DataMode,
+  EnrichmentRecord,
+  GetPublicationsResponse,
+  ModeReason,
+  TitleResolution,
+} from '../researchmap/types';
+
+export interface ProtocolMap {
+  /** researchmap 業績一覧 (キャッシュ優先、1ページビューにつき 1 回) */
+  getPublications(data: {
+    permalink: string;
+    forceRefresh?: boolean;
+  }): GetPublicationsResponse;
+
+  /** DOI チャンク (≤20) の外部 DB 照合。キー = 正規化 DOI */
+  enrichDois(data: { dois: string[] }): Record<string, EnrichmentRecord>;
+
+  /** DOI なし欧文タイトルの Crossref 照合 (ネガティブ結果も 30 日キャッシュ) */
+  resolveTitleDoi(data: {
+    title: string;
+    year: number | null;
+    firstAuthorFamily: string | null;
+  }): TitleResolution;
+
+  getMode(): { mode: DataMode; reason: ModeReason };
+  clearCache(): { clearedEntries: number };
+  getCacheStats(): { entries: number; approxBytes: number };
+}
+
+export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

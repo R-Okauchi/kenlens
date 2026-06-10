@@ -1,0 +1,130 @@
+---
+interface Props {
+  lang: 'ja' | 'en';
+}
+
+const { lang } = Astro.props;
+
+const t =
+  lang === 'ja'
+    ? {
+        heading: 'よくある質問',
+        items: [
+          {
+            q: 'これは研究評価ツールですか?',
+            a: 'いいえ。公開メタデータの可視化と整備支援であり、研究者の比較・順位付け・採点は行いません。DORA (研究評価に関するサンフランシスコ宣言) の趣旨に賛同します。',
+          },
+          {
+            q: 'データはどこから取得していますか?',
+            a: 'researchmapの公開APIと、OpenAlex・Crossref・Unpaywallが公開しているメタデータです。各サービスとは提携関係にありません。',
+          },
+          {
+            q: '被引用数が表示されない論文があるのはなぜですか?',
+            a: '外部データベースの収録状況によるもので、論文の問題ではありません。',
+          },
+          {
+            q: 'Google Scholarと被引用数が違うのはなぜですか?',
+            a: '集計している母集団が違うためです。Google Scholarはプレプリントや紀要・学位論文などウェブ上の幅広い文献からの引用も数えるため、どのデータベースと比べても最も大きな数字になりがちです。研レンズはOpenAlexの公開データ (構造化された参照リストを持つ学術文献) を集計しており、どちらかが間違っているわけではありません。だからこそ、すべての数値に出典と取得時点を併記しています。',
+          },
+          {
+            q: '閲覧履歴は収集されますか?',
+            a: 'いいえ。閲覧中のresearchmapページの処理に必要な通信以外は行わず、閲覧履歴の収集もありません。',
+          },
+        ],
+      }
+    : {
+        heading: 'FAQ',
+        items: [
+          {
+            q: 'Is this a research evaluation tool?',
+            a: 'No. KenLens visualizes public metadata and supports profile maintenance; it does not compare, rank, or score researchers. We support the spirit of DORA (the San Francisco Declaration on Research Assessment).',
+          },
+          {
+            q: 'Where does the data come from?',
+            a: 'From the researchmap public API and the public metadata published by OpenAlex, Crossref, and Unpaywall. KenLens is not affiliated with any of these services.',
+          },
+          {
+            q: 'Why do some papers show no citation count?',
+            a: 'It depends on the coverage of external databases — it does not indicate any issue with the paper itself.',
+          },
+          {
+            q: 'Why does the citation count differ from Google Scholar?',
+            a: 'They count different populations. Google Scholar also counts citations from a very broad range of web documents — preprints, bulletins, theses — so its numbers tend to be the largest of any database. KenLens aggregates OpenAlex public data (scholarly works with structured reference lists); neither is wrong. That is exactly why every number is shown with its source and retrieval date.',
+          },
+          {
+            q: 'Is my browsing history collected?',
+            a: 'No. KenLens only makes the network requests needed to process the researchmap page you are viewing, and it does not collect your browsing history.',
+          },
+        ],
+      };
+---
+
+<section id="faq" class="section">
+  <div class="container">
+    <h2 class="section-title">{t.heading}</h2>
+    <div class="list">
+      {
+        t.items.map((item) => (
+          <details>
+            <summary>{item.q}</summary>
+            <p>{item.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .list {
+    max-width: 720px;
+    margin: 32px auto 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  details {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 16px 20px;
+    font-weight: 700;
+    font-size: 15px;
+    position: relative;
+    padding-right: 44px;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary::after {
+    content: '+';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--brand);
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  details[open] summary::after {
+    content: '−';
+  }
+
+  details p {
+    margin: 0;
+    padding: 0 20px 16px;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+</style>

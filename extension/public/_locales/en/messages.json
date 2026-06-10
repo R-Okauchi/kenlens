@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "KenLens — Citations, OA & DOI on researchmap"
+  },
+  "extDescription": {
+    "message": "Shows citations, open access status, and DOIs on researchmap profiles. Not research evaluation — it visualizes public metadata and supports profile maintenance."
+  }
+}

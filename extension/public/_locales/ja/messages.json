@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "研レンズ — researchmapに被引用数・OA・DOIを表示"
+  },
+  "extDescription": {
+    "message": "researchmapの業績ページに被引用数・OA・DOI情報を表示します。研究評価ではなく、公開メタデータの可視化・整備支援です。"
+  }
+}

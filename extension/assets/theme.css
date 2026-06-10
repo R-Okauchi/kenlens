@@ -1,0 +1,125 @@
+/*
+ * 研レンズ 共有デザイントークン (content script / options / welcome 共通)。
+ *
+ * 原則:
+ * - px 固定 (Shadow DOM でも html の font-size は打ち消せず rem がホスト依存になる)
+ * - 色相は teal / green / neutral の 3 系統のみ。赤・橙・黄は全面禁止 (エラー含む)
+ * - データなしは neutral gray。数値の大小を色で表現しない
+ */
+@theme {
+  --spacing: 4px;
+
+  --text-2xs: 10.5px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-num: 22px;
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans',
+    'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic UI', 'Yu Gothic',
+    Meiryo, sans-serif;
+
+  --color-brand: #0f766e;
+  --color-brand-strong: #0b5e57;
+  --color-brand-soft: #e6f4f2;
+
+  --color-cite-text: #0b5e57;
+  --color-cite-bg: #e6f4f2;
+  --color-oa-text: #15693b;
+  --color-oa-bg: #e7f6ec;
+  --color-doi-text: #3a5276;
+  --color-doi-bg: #eef2f8;
+  --color-hint-text: #5d6b7e;
+  --color-hint-bg: #f8fafc;
+  --color-hint-border: #8a94a4;
+
+  --color-ink: #1f2937;
+  --color-ink-soft: #667085;
+  --color-ink-faint: #98a2b3;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f4f6f8;
+  --color-border-default: #e4e7ec;
+
+  --color-tooltip-bg: #1f2937;
+  --color-tooltip-text: #ffffff;
+  --color-focus-ring: #0ea5e9;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-popover:
+    0 4px 16px rgba(16, 24, 40, 0.12), 0 1px 2px rgba(16, 24, 40, 0.06);
+
+  --ease-kl: cubic-bezier(0.2, 0.8, 0.4, 1);
+}
+
+/* スケルトン shimmer (reduced-motion では静的 pill) */
+@keyframes kl-shimmer {
+  0% {
+    background-position: -120px 0;
+  }
+  100% {
+    background-position: 120px 0;
+  }
+}
+
+.kl-skeleton {
+  background: linear-gradient(90deg, #f4f6f8 25%, #eceff3 50%, #f4f6f8 75%);
+  background-size: 240px 100%;
+  animation: kl-shimmer 1.4s linear infinite;
+  border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kl-skeleton {
+    animation: none;
+    opacity: 0.6;
+  }
+  .kl-fade-in {
+    transition: none !important;
+  }
+  .kl-spin {
+    animation: none !important;
+  }
+}
+
+.kl-fade-in {
+  opacity: 1;
+  transition: opacity 120ms var(--ease-kl);
+}
+
+@starting-style {
+  .kl-fade-in {
+    opacity: 0;
+  }
+}
+
+@keyframes kl-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.kl-spin {
+  animation: kl-rotate 0.9s linear infinite;
+}
+
+/* DOI 未登録 CTA → 該当チップへのスクロールハイライト */
+@keyframes kl-highlight {
+  0%,
+  60% {
+    background-color: var(--color-brand-soft);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.kl-highlight {
+  animation: kl-highlight 1.2s ease-out 1;
+}

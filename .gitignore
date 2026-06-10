@@ -1,0 +1,23 @@
+node_modules/
+.output/
+.wxt/
+dist/
+.astro/
+*.log
+.DS_Store
+.env
+.env.*
+stats.html
+web-ext.config.ts
+
+# 内部文書 (個人情報・規約対応の内部検討を含む — 公開しない)
+docs/internal/
+
+# メンテナ専用 (公開リポジトリに含めない)
+CLAUDE.md
+
+# 実在研究者ページのスナップショット — 再配布しない (scripts/save-fixtures.sh で再生成)
+extension/tests/fixtures/
+
+# E2E スクショ (実在研究者ページを含む — 再配布しない)
+extension/e2e/shots/

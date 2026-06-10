@@ -1,0 +1,129 @@
+---
+interface Props {
+  lang: 'ja' | 'en';
+}
+
+const { lang } = Astro.props;
+
+const t =
+  lang === 'ja'
+    ? {
+        heading: '数字の見せ方に、原則があります',
+        lead: '計量指標は便利で、同じくらい誤解されやすいもの。研レンズは表示のしかたを先に決めています。',
+        items: [
+          {
+            title: '出典と取得時点を、必ず添える',
+            desc: '「被引用数 27件 — OpenAlex・2026/6/8時点」のように。どこの数字か分からない表示はしません。',
+          },
+          {
+            title: '率は分数が主役',
+            desc: '「DOI登録 18 / 24件」。パーセントは添えるだけ。分母を隠すと、数字は別のものになるからです。',
+          },
+          {
+            title: 'データが無い論文は、静かなまま',
+            desc: '外部データベースの収録状況は、論文の良し悪しではありません。0 を並べて目立たせるようなことはしません。',
+          },
+          {
+            title: '赤や黄色を使わない',
+            desc: '何かが欠けているかのように見せる色は、画面のどこにもありません。見つかった DOI 候補だけを、ヒントとしてそっと置きます。',
+          },
+        ],
+      }
+    : {
+        heading: 'Principles for showing numbers',
+        lead: 'Metrics are useful — and just as easily misread. KenLens decides how to display them before what to display.',
+        items: [
+          {
+            title: 'Always with source and date',
+            desc: 'Like "27 citations — OpenAlex, as of Jun 8, 2026". No numbers of unknown origin.',
+          },
+          {
+            title: 'Fractions first',
+            desc: '"With DOI: 18 / 24". Percentages are secondary — hiding the denominator turns a number into something else.',
+          },
+          {
+            title: 'No data, no noise',
+            desc: 'Database coverage says nothing about the quality of a paper. We never line up zeros or warnings.',
+          },
+          {
+            title: 'No red, no yellow',
+            desc: 'Nothing on screen hints at deficiency. A discovered DOI candidate is placed quietly, as a hint.',
+          },
+        ],
+      };
+---
+
+<section id="principles" class="section section-sunken">
+  <div class="container">
+    <h2 class="section-title">{t.heading}</h2>
+    <p class="lead">{t.lead}</p>
+    <dl class="rules">
+      {
+        t.items.map((item, i) => (
+          <div class="rule">
+            <dt>
+              <span class="num">{String(i + 1).padStart(2, '0')}</span>
+              {item.title}
+            </dt>
+            <dd>{item.desc}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
+
+<style>
+  .lead {
+    max-width: 560px;
+    margin: 0 0 36px;
+    color: var(--ink-soft);
+    font-size: 15px;
+  }
+
+  .rules {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 48px;
+  }
+
+  .rule {
+    padding: 22px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  dt {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .num {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brand);
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  dd {
+    margin: 0 0 0 30px;
+    font-size: 14px;
+    line-height: 1.85;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 720px) {
+    .rules {
+      grid-template-columns: 1fr;
+    }
+
+    .rule {
+      padding: 16px 0;
+    }
+  }
+</style>
