@@ -139,6 +139,18 @@ try {
     // shot-list 要件: バッジトグル群・動作モード・「キャッシュを消去」が同一フレームに入る位置
     await options.evaluate(() => window.scrollTo(0, 260));
     await shot(options, `${lang}-5-options`);
+
+    // --- 6. 整備レポート (v0.3) — 著者推定 + 未登録候補リスト ---
+    const report = await context.newPage();
+    await report.goto(`chrome-extension://${extId}/report.html?permalink=${PROFILE}`);
+    await report
+      .locator('text=/推定された著者|Inferred author|推定できませんでした|Could not infer/')
+      .first()
+      .waitFor({ timeout: 180_000 });
+    await report.waitForTimeout(500);
+    await shot(report, `${lang}-6-report`);
+    await report.close();
+
     if (lang === 'en') {
       await options.getByLabel(/言語|Language/).selectOption('auto');
     }

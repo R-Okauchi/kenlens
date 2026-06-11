@@ -12,6 +12,7 @@ import { createRoot } from 'react-dom/client';
 import './style.css';
 import { Logo } from '@/components/common/Logo';
 import { LocaleContext, useI18n, type Locale } from '@/lib/i18n';
+import { getSettings } from '@/lib/settings/settings';
 import { sendMessage } from '@/lib/messaging/protocol';
 import type { Publication } from '@/lib/researchmap/types';
 import type { AuthorWorksResult, ReportCandidate } from '@/lib/report/types';
@@ -461,11 +462,15 @@ function ReportPage({ permalink }: { permalink: string | null }) {
   );
 }
 
-const locale: Locale = navigator.language.toLowerCase().startsWith('ja') ? 'ja' : 'en';
-document.documentElement.lang = locale;
+// 設定の言語オーバーライドを尊重する (auto はブラウザ言語に従う)
+void getSettings().then((settings) => {
+  const browserLocale: Locale = navigator.language.toLowerCase().startsWith('ja') ? 'ja' : 'en';
+  const locale: Locale = settings.language === 'auto' ? browserLocale : settings.language;
+  document.documentElement.lang = locale;
 
-createRoot(document.getElementById('root')!).render(
-  <LocaleContext.Provider value={locale}>
-    <ReportPage permalink={parsePermalink()} />
-  </LocaleContext.Provider>,
-);
+  createRoot(document.getElementById('root')!).render(
+    <LocaleContext.Provider value={locale}>
+      <ReportPage permalink={parsePermalink()} />
+    </LocaleContext.Provider>,
+  );
+});
