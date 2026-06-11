@@ -22,7 +22,7 @@ Only the minimum needed to render the overlay is sent, and only to the following
 | Destination | Data sent | Purpose |
 | --- | --- | --- |
 | `api.researchmap.jp` | The permalink (URL slug) of the researcher page you are viewing | Fetch the public publication list (`GET /{permalink}/published_papers?limit=1000&start=N`) |
-| `api.openalex.org` | Publication DOIs (plus your optional OpenAlex API key, if configured) | Fetch citation counts and OA status (`GET /works/doi:{DOI}`) |
+| `api.openalex.org` | Publication DOIs (plus your optional OpenAlex API key, if configured); in the maintenance report, the OpenAlex author-record ID derived from those DOIs | Fetch citation counts and OA status (`GET /works/doi:{DOI}`), and author-works listing for the maintenance report |
 | `api.crossref.org` | Publication DOIs; for Latin-script publications without a DOI: title, publication year, and first author's family name | Citation-count fallback and DOI-candidate matching (`query.bibliographic`) |
 | `api.unpaywall.org` | Publication DOIs | OA status (only on the Crossref fallback path) |
 | `r-okauchi.github.io` | Nothing (a static `config.json` is fetched) | Remote operational flag used to disable external-API mode in case of an incident. Checked once a day and on install |
@@ -30,6 +30,7 @@ Only the minimum needed to render the overlay is sent, and only to the following
 Notes:
 
 - Title matching applies only to Latin-script titles, and only bibliographic data already public on the page (title, year, first author family name) is sent.
+- BibTeX files pasted into or selected in the maintenance report are processed entirely inside your browser and never transmitted.
 - Requests to Crossref and Unpaywall include the **developer's** contact email address as a parameter, per those APIs' "polite pool" guidelines. Your email address is never sent.
 - All of the above is public bibliographic metadata from researchmap — none of it is information about you.
 - Requests are self-throttled per host (researchmap: 1 request/second, single concurrency; others similarly limited).

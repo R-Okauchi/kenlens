@@ -36,6 +36,11 @@ import Footer from '../components/Footer.astro';
           「タイトル・発行年・第一著者の姓」を、OpenAlex・Crossref・Unpaywall に送信し、
           公開メタデータ (被引用数・OA状況・DOI候補など) を取得します。
         </li>
+        <li>
+          整備レポートでは、上記のDOIから導かれたOpenAlexの著者レコードIDを用いて、
+          OpenAlexに著者の論文一覧を照会します。レポートに貼り付け・選択した
+          BibTeXファイルはブラウザ内でのみ処理され、外部に送信されることはありません。
+        </li>
       </ol>
       <p>
         これら以外の情報 (閲覧履歴、他のウェブサイトの閲覧内容、個人を特定する情報など)

@@ -22,7 +22,7 @@
 | 送信先 | 送信される情報 | 目的 |
 | --- | --- | --- |
 | `api.researchmap.jp` | 閲覧中の研究者ページのパーマリンク (URL 末尾の識別子) | 公開業績一覧の取得 (`GET /{permalink}/published_papers?limit=1000&start=N`) |
-| `api.openalex.org` | 論文の DOI (および任意設定の OpenAlex API キー) | 被引用数・OA 状況の取得 (`GET /works/doi:{DOI}`) |
+| `api.openalex.org` | 論文の DOI (および任意設定の OpenAlex API キー)。整備レポートでは、これらの DOI から導かれた OpenAlex 著者レコード ID | 被引用数・OA 状況の取得 (`GET /works/doi:{DOI}`)、整備レポートでの著者論文一覧の照会 |
 | `api.crossref.org` | 論文の DOI。DOI 未登録の欧文論文では、タイトル・出版年・筆頭著者の姓 | 被引用数の取得 (フォールバック) と DOI 候補の照合 (`query.bibliographic`) |
 | `api.unpaywall.org` | 論文の DOI | OA 状況の取得 (Crossref 経路のときのみ) |
 | `r-okauchi.github.io` | なし (静的 JSON `config.json` の取得のみ) | リモート設定 (障害時に外部 API 利用を停止するための運用フラグ) の確認。1 日 1 回およびインストール時 |
@@ -30,6 +30,7 @@
 補足:
 
 - タイトル照合は欧文 (ラテン文字) タイトルの論文のみ対象で、送信されるのはページ上に公開されている書誌情報 (タイトル・出版年・筆頭著者姓) に限られます。
+- 整備レポートに貼り付け・選択した BibTeX ファイルはブラウザ内でのみ処理され、外部に送信されることはありません。
 - Crossref / Unpaywall へのリクエストには、API 提供者のガイドライン (polite pool) に従い、**開発者の**連絡先メールアドレスがパラメータとして付与されます。利用者のメールアドレスが送信されることはありません。
 - これらの情報はいずれも researchmap 上で公開されている書誌メタデータであり、利用者個人に関する情報ではありません。
 - 各 API へのリクエストはホストごとに自己制限されています (researchmap: 1 リクエスト/秒・並列 1、ほか)。
