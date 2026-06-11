@@ -365,9 +365,9 @@ try {
   await firstCheckbox.check();
   const dlButton = report
     .locator('button')
-    .filter({ hasText: /BibTeXをダウンロード|Download BibTeX/ })
+    .filter({ hasText: /researchmapインポート用|researchmap import/ })
     .first();
-  check('選択するとダウンロードボタンが有効になる', await dlButton.isEnabled());
+  check('選択すると researchmap 用ダウンロードが有効になる', await dlButton.isEnabled());
   await report.screenshot({ path: join(SHOTS, '09-report.png') });
   await report.close();
 

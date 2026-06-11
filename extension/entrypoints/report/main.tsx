@@ -17,6 +17,7 @@ import type { Publication } from '@/lib/researchmap/types';
 import type { AuthorWorksResult, ReportCandidate } from '@/lib/report/types';
 import { diffAgainstResearchmap, type DiffResult } from '@/lib/report/diff';
 import { candidatesFromBibtex, generateBibtex } from '@/lib/report/bibtex';
+import { generateRmImportJsonl } from '@/lib/report/rmImport';
 
 /** researchmap permalink の許容文字 (URL パス断片としてそのまま埋め込むため厳格に) */
 const PERMALINK_RE = /^[A-Za-z0-9._-]+$/;
@@ -40,16 +41,23 @@ const primaryButtonClass =
 
 /* ---- 候補リスト (Section A / B 共用) ---- */
 
-function downloadBibtex(selected: ReportCandidate[]) {
-  const blob = new Blob([generateBibtex(selected)], {
-    type: 'application/x-bibtex',
-  });
+function download(content: string, mime: string, filename: string) {
+  const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'kenlens-missing.bib';
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function downloadBibtex(selected: ReportCandidate[]) {
+  download(generateBibtex(selected), 'application/x-bibtex', 'kenlens-missing.bib');
+}
+
+function downloadRmImport(selected: ReportCandidate[]) {
+  const { jsonl } = generateRmImportJsonl(selected);
+  download(jsonl, 'application/json', 'kenlens-researchmap-import.jsonl');
 }
 
 function CandidateList({ diff }: { diff: DiffResult }) {
@@ -135,14 +143,31 @@ function CandidateList({ diff }: { diff: DiffResult }) {
       </ul>
 
       <div className="mt-3">
-        <button
-          type="button"
-          className={primaryButtonClass}
-          disabled={selectedCandidates.length === 0}
-          onClick={() => downloadBibtex(selectedCandidates)}
-        >
-          {t('report_download', { n: selectedCandidates.length })}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className={primaryButtonClass}
+            disabled={selectedCandidates.length === 0}
+            onClick={() => downloadRmImport(selectedCandidates)}
+          >
+            {t('report_download_rm', { n: selectedCandidates.length })}
+          </button>
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            disabled={selectedCandidates.length === 0}
+            onClick={() => downloadBibtex(selectedCandidates)}
+          >
+            {t('report_download', { n: selectedCandidates.length })}
+          </button>
+        </div>
+        {selectedCandidates.some((c) => c.year === null) && (
+          <p className="kl-dark-soft mt-2 mb-0 text-sm text-ink-soft" aria-live="polite">
+            {t('report_no_date_note', {
+              n: selectedCandidates.filter((c) => c.year === null).length,
+            })}
+          </p>
+        )}
         <p className="kl-dark-soft mt-2 mb-0 text-sm text-ink-soft">
           {t('report_import_hint')}
         </p>

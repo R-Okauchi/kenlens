@@ -73,7 +73,7 @@ const ja = {
   metric_oa_src: '判定可能 {resolvable}件中',
   metric_doi: 'DOI登録',
   metric_doi_src: '全論文 {total}件中',
-  metric_doi_cta: '未登録の{n}件を見る →',
+  metric_doi_cta: 'DOI未登録の{n}件を見る →',
   metric_coauthors: 'よく共著する研究者',
   metric_coauthors_etc: 'ほか',
   metric_nodata: '—',
@@ -108,9 +108,12 @@ const ja = {
   report_no_missing: '差分は見つかりませんでした — researchmapはこのソースと同期できています。',
   report_select_all: 'すべて選択',
   report_select_none: '選択を解除',
-  report_download: '選択した{n}件のBibTeXをダウンロード',
+  report_download_rm: '選択した{n}件をresearchmapインポート用ファイルで保存',
+  report_download: 'BibTeXで保存 ({n}件)',
+  report_no_date_note:
+    '出版年が不明な{n}件は、researchmap用ファイルには含められません (出版年月が必須のため。BibTeXには含まれます)。',
   report_import_hint:
-    'ダウンロードした .bib は、researchmapの「業績の登録 → インポート」から取り込めます (ご本人のログインが必要です)。',
+    'researchmap用ファイル (.jsonl) は、researchmapの「設定 (歯車) → 研究者・業績インポート」から取り込めます。整合性チェックで内容を確認してからインポートが実行されます (ご本人のログインが必要です)。',
   report_col_year: '年',
   report_col_title: 'タイトル',
   report_col_venue: '掲載誌',
@@ -264,9 +267,12 @@ const en: Messages = {
   report_no_missing: 'No gaps found — researchmap is in sync with this source.',
   report_select_all: 'Select all',
   report_select_none: 'Clear selection',
-  report_download: 'Download BibTeX for {n} selected',
+  report_download_rm: 'Save {n} selected as a researchmap import file',
+  report_download: 'Save as BibTeX ({n})',
+  report_no_date_note:
+    '{n} items without a publication year cannot be included in the researchmap file (the date is required there; they are still in the BibTeX).',
   report_import_hint:
-    'The downloaded .bib can be imported via researchmap "業績の登録 → インポート" (owner login required).',
+    'The researchmap file (.jsonl) can be imported via researchmap "Settings (gear) → Import researcher/achievements". An integrity check lets you review before anything is applied (owner login required).',
   report_col_year: 'Year',
   report_col_title: 'Title',
   report_col_venue: 'Venue',
