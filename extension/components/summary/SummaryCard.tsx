@@ -14,6 +14,7 @@ import type { PageContext } from '@/lib/researchmap/types';
 import type { SummaryModel } from '@/lib/state/summary-model';
 import { RESEARCHMAP_ORIGIN } from '@/lib/constants';
 import { Logo } from '../common/Logo';
+import { ShareDialog } from './ShareDialog';
 
 interface SummaryCardProps {
   ctx: PageContext;
@@ -86,6 +87,7 @@ export function SummaryCard({
     () => model.get(),
   );
   const [collapsed, setCollapsed] = useState(collapsedInitially);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     onToggleCollapse(collapsed);
@@ -111,6 +113,22 @@ export function SummaryCard({
           <span className="text-2xs text-ink-soft">
             {t('summary_fetched', { date: formatDate(state.fetchedAt) })}
           </span>
+        )}
+        {!collapsed && state.phase === 'ready' && metrics && state.enrichComplete && (
+          <button
+            type="button"
+            aria-label={t('share_open')}
+            title={t('share_open')}
+            onClick={() => setShareOpen(true)}
+            className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent text-ink-soft outline-none hover:bg-surface-sunken focus-visible:ring-2 focus-visible:ring-focus-ring"
+          >
+            {/* 共有 (画像) アイコン */}
+            <svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+              <rect x="1.5" y="3.5" width="13" height="10" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              <circle cx="5.5" cy="7" r="1.2" fill="currentColor" />
+              <path d="M3 12l3.5-3.5 2.5 2.5 2-2 3 3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+            </svg>
+          </button>
         )}
         {!collapsed && state.phase === 'ready' && (
           <button
@@ -158,6 +176,14 @@ export function SummaryCard({
     >
       <div className="h-0.5 w-full" style={{ background: 'linear-gradient(135deg, #0D9488, #0EA5E9)' }} />
       {header}
+
+      {shareOpen && metrics && state.fetchedAt !== null && (
+        <ShareDialog
+          metrics={metrics}
+          fetchedAt={state.fetchedAt}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
 
       {!collapsed && (
         <div className="border-t border-border-default">

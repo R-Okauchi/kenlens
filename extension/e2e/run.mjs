@@ -223,6 +223,26 @@ try {
   check('折りたたみ状態がリロード後も保持される', collapsedText.includes('展開する'));
   await page.locator('kenlens-summary').locator('button', { hasText: '展開する' }).click();
 
+  // 共有カード (v0.4): ダイアログ → canvas 描画 → Esc で閉じる
+  const shareBtn = page
+    .locator(
+      'kenlens-summary button[aria-label="画像で共有"], kenlens-summary button[aria-label="Share as image"]',
+    )
+    .first();
+  await shareBtn.waitFor({ timeout: 60_000 });
+  await shareBtn.click();
+  const shareDialog = page.locator('kenlens-summary [role="dialog"]').first();
+  await shareDialog.waitFor({ timeout: 5_000 });
+  const dataLen = await shareDialog
+    .locator('canvas')
+    .evaluate((c) => c.toDataURL('image/png').length);
+  check(`共有カードの canvas が描画される (${Math.round(dataLen / 1024)}KB)`, dataLen > 30_000);
+  const shareText = await shadowText(page.locator('kenlens-summary'));
+  check('共有ダイアログに利用ノートがある', /記録・共有用|your own profile/.test(shareText));
+  await page.screenshot({ path: join(SHOTS, '08-share-card.png') });
+  await page.keyboard.press('Escape');
+  check('Esc で共有ダイアログが閉じる', !(await shareDialog.isVisible().catch(() => false)));
+
   // 2 回目ロードはキャッシュで高速 (researchmap API を再度叩かない)
   const rmRequests = [];
   page.on('request', (req) => {

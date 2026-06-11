@@ -81,6 +81,17 @@ const ja = {
   summary_degraded: '限定モード: 表示中のページから算出しています',
   summary_load_all: '全件を読み込む',
 
+  // --- 共有カード ---
+  share_open: '画像で共有',
+  share_dialog_title: '共有カード',
+  share_copy: '画像をコピー',
+  share_copied: 'コピーしました',
+  share_copy_failed: 'コピーできませんでした。「PNGを保存」をお使いください。',
+  share_save: 'PNGを保存',
+  share_note:
+    'ご自身のプロフィールの記録・共有用です。免責文とデータ出典は画像に含まれます。',
+  share_close: '閉じる',
+
   // --- 共通 (免責・クレジットは packages/shared が単一ソース) ---
   disclaimer: DISCLAIMER.ja,
   credit_data: DATA_CREDITS.ja,
@@ -191,6 +202,16 @@ const en: Messages = {
   summary_empty: 'No public publications registered',
   summary_degraded: 'Limited mode: computed from the visible page',
   summary_load_all: 'Load all',
+
+  share_open: 'Share as image',
+  share_dialog_title: 'Share card',
+  share_copy: 'Copy image',
+  share_copied: 'Copied',
+  share_copy_failed: 'Could not copy. Please use "Save PNG".',
+  share_save: 'Save PNG',
+  share_note:
+    'For keeping and sharing a record of your own profile. The disclaimer and data credits are part of the image.',
+  share_close: 'Close',
 
   disclaimer: DISCLAIMER.en,
   credit_data: DATA_CREDITS.en,
