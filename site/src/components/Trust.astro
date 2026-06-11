@@ -20,7 +20,10 @@ const t =
         oss: 'Open source (Apache-2.0)',
       };
 
-const base = import.meta.env.BASE_URL;
+// BASE_URL は base 設定時に末尾スラッシュ無し ('/kenlens') になるため必ず正規化する
+const base = import.meta.env.BASE_URL.endsWith('/')
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
 const privacyHref = lang === 'ja' ? `${base}privacy/` : `${base}en/privacy/`;
 ---
 
