@@ -5,103 +5,60 @@ interface Props {
 
 const { lang } = Astro.props;
 
-const sources = ['researchmap', 'OpenAlex', 'Crossref', 'Unpaywall'];
-
 const t =
   lang === 'ja'
     ? {
-        privacyTitle: 'プライバシー',
-        privacyDesc:
-          '閲覧中のresearchmapページの処理に必要な通信だけを行います。閲覧履歴の収集はありません。',
+        privacy: '通信は閲覧中のresearchmapページの処理に必要な分だけ。閲覧履歴の収集はありません。',
         privacyLink: 'プライバシーポリシー',
-        sourcesTitle: 'データソース',
-        nonAffiliation: '各サービスとは提携関係にありません。',
-        ossTitle: 'オープンソース',
-        ossDesc: 'コードは GitHub で公開しています (Apache-2.0)。実装はいつでも検証できます。',
+        sources: 'データ: researchmap ・ OpenAlex ・ Crossref ・ Unpaywall (各サービスとは提携していません)',
+        oss: 'Apache-2.0 で公開',
       }
     : {
-        privacyTitle: 'Privacy',
-        privacyDesc:
-          'KenLens only makes the requests needed to process the researchmap page you are viewing. No browsing history is collected.',
+        privacy: 'Only the requests needed for the researchmap page you are viewing. No browsing history is collected.',
         privacyLink: 'Privacy policy',
-        sourcesTitle: 'Data sources',
-        nonAffiliation: 'Not affiliated with any of these services.',
-        ossTitle: 'Open source',
-        ossDesc: 'The code is public on GitHub (Apache-2.0) — the implementation is always verifiable.',
+        sources: 'Data: researchmap, OpenAlex, Crossref, Unpaywall (not affiliated with any of them)',
+        oss: 'Open source (Apache-2.0)',
       };
 
 const base = import.meta.env.BASE_URL;
 const privacyHref = lang === 'ja' ? `${base}privacy/` : `${base}en/privacy/`;
 ---
 
-<section id="trust" class="section">
+<section id="trust" class="strip-wrap">
   <div class="container">
-    <div class="cols">
-      <div class="col">
-        <h3>{t.privacyTitle}</h3>
-        <p>{t.privacyDesc}</p>
-        <p><a href={privacyHref}>{t.privacyLink} →</a></p>
-      </div>
-      <div class="col">
-        <h3>{t.sourcesTitle}</h3>
-        <p class="sources">{sources.join(' ・ ')}</p>
-        <p class="note">{t.nonAffiliation}</p>
-      </div>
-      <div class="col">
-        <h3>{t.ossTitle}</h3>
-        <p>
-          <a href="https://github.com/R-Okauchi/kenlens" target="_blank" rel="noopener noreferrer">
-            {t.ossDesc}
-          </a>
-        </p>
-      </div>
-    </div>
+    <p class="strip">
+      <span>{t.privacy} <a href={privacyHref}>{t.privacyLink} →</a></span>
+      <span>{t.sources}</span>
+      <span>
+        <a href="https://github.com/R-Okauchi/kenlens" target="_blank" rel="noopener noreferrer">
+          {t.oss} ↗
+        </a>
+      </span>
+    </p>
   </div>
 </section>
 
 <style>
-  .cols {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 48px;
+  .strip-wrap {
     border-top: 1px solid var(--border);
-    padding-top: 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-sunken);
   }
 
-  h3 {
+  .strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 36px;
+    margin: 0;
+    padding: 18px 0;
     font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: var(--brand);
-    margin: 0 0 10px;
-  }
-
-  p {
-    margin: 0 0 8px;
-    font-size: 14px;
-    line-height: 1.85;
+    line-height: 1.8;
     color: var(--ink-soft);
-  }
-
-  .sources {
-    color: var(--ink);
-    font-weight: 600;
-  }
-
-  .note {
-    font-size: 12.5px;
   }
 
   a {
     color: var(--ink-soft);
     text-decoration: underline;
     text-underline-offset: 3px;
-  }
-
-  @media (max-width: 720px) {
-    .cols {
-      grid-template-columns: 1fr;
-      gap: 28px;
-    }
   }
 </style>

@@ -14,8 +14,8 @@ const enHref = `${base}en/${path}`;
 
 const t =
   lang === 'ja'
-    ? { features: '原則', privacy: 'プライバシー' }
-    : { features: 'Principles', privacy: 'Privacy' };
+    ? { features: '機能', privacy: 'プライバシー' }
+    : { features: 'Features', privacy: 'Privacy' };
 ---
 
 <header class="site-header">
@@ -45,7 +45,7 @@ const t =
     </a>
 
     <nav class="nav" aria-label={lang === 'ja' ? 'メインナビゲーション' : 'Main navigation'}>
-      <a href={`${home}#principles`}>{t.features}</a>
+      <a href={`${home}#features`}>{t.features}</a>
       <a href={privacyHref}>{t.privacy}</a>
       <a href="https://github.com/R-Okauchi/kenlens" target="_blank" rel="noopener noreferrer">GitHub</a>
       <span class="lang-switch">

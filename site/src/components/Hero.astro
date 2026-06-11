@@ -1,77 +1,66 @@
 ---
-// TAGLINE / DISCLAIMER mirrored verbatim from packages/shared/src/disclaimer.ts — keep in sync.
-const TAGLINE = {
-  ja: '業績が、見える。整う。つながる。',
-  en: 'See it. Tidy it. Connect it.',
-} as const;
-
-const DISCLAIMER = {
-  ja: '研究評価ではなく、公開メタデータの可視化・整備支援です。',
-  en: 'This is not research evaluation — it visualizes public metadata and supports profile maintenance.',
-} as const;
-
 interface Props {
   lang: 'ja' | 'en';
 }
 
 const { lang } = Astro.props;
 
-// 日本語コピーは文節単位の span (inline-block) で折り返し位置を制御する
-const subPhrases =
+const STORE_URL = 'https://chromewebstore.google.com/detail/naccpnjaahllelmoijpcepnpkpamabec';
+
+// 日本語見出しは文節単位の span (inline-block) で折り返し位置を制御する
+const headlinePhrases =
   lang === 'ja'
-    ? ['researchmapの研究者ページに、', '被引用数・OA・DOIを', 'その場で表示する', 'Chrome拡張です。']
-    : ['Shows citations, OA status, and DOIs', 'right on researchmap researcher pages.'];
+    ? ['researchmapに、', '被引用数・OA・DOIを表示']
+    : ['Citations, OA & DOI', 'on researchmap'];
 
 const t =
   lang === 'ja'
     ? {
+        eyebrow: '研レンズ — KenLens',
+        sub: '論文ごとのバッジ、プロフィールのサマリー、未登録の論文を見つける整備レポート。無料・オープンソースのChrome拡張です。',
         cta: 'Chromeに追加',
-        ctaSub: 'ソースコードを見る',
+        ctaSub: 'GitHub',
         panelTitle: '論文',
         papers: [
           {
             title: '都市河川流域における降雨流出特性の解析',
             meta: '土木学会論文集 79(2)　2024年3月',
             badges: 'rich',
-            note: '被引用数・OA本文・DOIへ、ページを離れずに。',
           },
           {
             title: '地方都市における歴史的橋梁の保存に関する一考察',
             meta: '○○大学紀要 12　2018年3月',
             badges: 'hint',
-            note: '未登録のDOI候補を見つけたら、そっと提案。',
           },
           {
             title: '河川構造物の維持管理に関する調査報告',
             meta: '調査報告書　2015年',
             badges: 'silent',
-            note: '外部DBに無い論文は、静かなまま。0で埋めることはしません。',
           },
         ],
         hintLabel: 'DOI候補',
       }
     : {
+        eyebrow: '研レンズ — KenLens',
+        sub: 'Per-paper badges, a profile summary, and a maintenance report that finds papers missing from researchmap. A free, open-source Chrome extension.',
         cta: 'Add to Chrome',
-        ctaSub: 'View the source',
+        ctaSub: 'GitHub',
         panelTitle: 'Published papers',
         papers: [
           {
             title: 'Rainfall-runoff characteristics in urban river basins',
             meta: 'Journal of JSCE 79(2)　Mar 2024',
             badges: 'rich',
-            note: 'Citations, OA full text, and DOI — without leaving the page.',
           },
           {
             title: 'On preserving historic bridges in regional cities',
             meta: 'University Bulletin 12　Mar 2018',
             badges: 'hint',
-            note: 'Found an unregistered DOI? A gentle suggestion appears.',
           },
           {
             title: 'A survey report on river structure maintenance',
             meta: 'Survey report　2015',
             badges: 'silent',
-            note: 'Not in external databases? It stays quiet. No zeros, no warnings.',
           },
         ],
         hintLabel: 'DOI found',
@@ -81,13 +70,13 @@ const t =
 <section class="hero">
   <div class="container hero-grid">
     <div class="copy">
-      <h1 class="tagline">{TAGLINE[lang]}</h1>
-      <p class="sub">
-        {subPhrases.map((ph) => <span class="ph">{ph}</span>)}
-      </p>
-      <p class="disclaimer">{DISCLAIMER[lang]}</p>
+      <p class="eyebrow">{t.eyebrow}</p>
+      <h1 class="headline">
+        {headlinePhrases.map((ph) => <span class="ph">{ph}</span>)}
+      </h1>
+      <p class="sub">{t.sub}</p>
       <div class="cta-row">
-        <a class="cta" href="https://chromewebstore.google.com/detail/naccpnjaahllelmoijpcepnpkpamabec" target="_blank" rel="noopener noreferrer">{t.cta}</a>
+        <a class="cta" href={STORE_URL} target="_blank" rel="noopener noreferrer">{t.cta}</a>
         <a
           class="cta-sub"
           href="https://github.com/R-Okauchi/kenlens"
@@ -125,7 +114,6 @@ const t =
                 )}
                 {p.badges === 'hint' && <span class="kl-pill kl-hint">✎ {t.hintLabel}</span>}
               </div>
-              <p class="kl-note">{p.note}</p>
             </div>
           ))
         }
@@ -151,46 +139,32 @@ const t =
     text-align: left;
   }
 
-  .tagline {
-    font-size: 42px;
+  .eyebrow {
+    margin: 0 0 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--brand);
+    letter-spacing: 0.03em;
+  }
+
+  .headline {
+    font-size: 40px;
     line-height: 1.35;
     letter-spacing: 0.01em;
-    margin: 0 0 18px;
+    margin: 0 0 16px;
   }
 
-  /* タグラインの前に置く短いブランドルール */
-  .tagline::before {
-    content: '';
-    display: block;
-    width: 44px;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--gradient);
-    margin-bottom: 22px;
-  }
-
-  .sub {
-    font-size: 17px;
-    line-height: 1.9;
-    color: var(--ink-soft);
-    margin: 0 0 14px;
-  }
-
-  /* 文節単位でしか折り返さない (「表示す/る」のような途中改行を防ぐ) */
+  /* 文節単位でしか折り返さない */
   .ph {
     display: inline-block;
   }
 
-  .disclaimer {
-    font-size: 13px;
-    color: var(--brand-strong);
-    margin: 0 0 30px;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .disclaimer {
-      color: #8ad6cc;
-    }
+  .sub {
+    font-size: 16px;
+    line-height: 1.9;
+    color: var(--ink-soft);
+    margin: 0 0 28px;
+    max-width: 480px;
   }
 
   .cta-row {
@@ -243,7 +217,6 @@ const t =
     text-align: left;
   }
 
-  /* 拡張のサマリーカードと同じ、上辺のブランドグラデ */
   .rm-panel::before {
     content: '';
     display: block;
@@ -273,7 +246,7 @@ const t =
   }
 
   .rm-item {
-    padding: 11px 14px 10px;
+    padding: 12px 14px;
     border-bottom: 1px solid #eeeeee;
   }
 
@@ -283,7 +256,7 @@ const t =
 
   .rm-title {
     margin: 0 0 2px;
-    color: #337ab7; /* Bootstrap 3 のリンク青 (researchmap 実物に合わせる) */
+    color: #337ab7;
     font-size: 13.5px;
     line-height: 1.5;
   }
@@ -340,19 +313,9 @@ const t =
     border: 1px dashed #8a94a4;
   }
 
-  /* モック内の注釈 (ホストページの一部ではなく研レンズ側の説明) */
-  .kl-note {
-    margin: 7px 0 0;
-    padding-left: 10px;
-    border-left: 2px solid var(--brand-soft);
-    color: #5d6b7e;
-    font-size: 11.5px;
-    line-height: 1.6;
-  }
-
   @media (max-width: 860px) {
     .hero {
-      padding: 48px 0 48px;
+      padding: 48px 0;
     }
 
     .hero-grid {
@@ -360,12 +323,8 @@ const t =
       gap: 40px;
     }
 
-    .tagline {
-      font-size: 30px;
-    }
-
-    .sub {
-      font-size: 15px;
+    .headline {
+      font-size: 28px;
     }
   }
 </style>

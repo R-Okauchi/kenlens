@@ -1,0 +1,320 @@
+---
+interface Props {
+  lang: 'ja' | 'en';
+}
+
+const { lang } = Astro.props;
+
+const t =
+  lang === 'ja'
+    ? {
+        heading: '機能',
+        f1: {
+          title: '論文ごとのバッジ',
+          desc: '被引用数 (OpenAlex)・OA本文へのリンク・DOIを各論文に。カーソルを合わせると出典と取得時点が見えます。',
+        },
+        f2: {
+          title: 'サマリーカード',
+          desc: '直近5年の論文数・被引用・OA・DOI登録をプロフィール上部に1枚で。率は「X / Y件」の分数表示です。',
+          tiles: [
+            { value: '114', label: '直近5年の論文' },
+            { value: '104 / 303', label: 'DOI登録 (34%)' },
+          ],
+        },
+        f3: {
+          title: '整備レポート',
+          desc: 'OpenAlexの著者レコードや、ご自身のGoogle ScholarのBibTeXと突合して、researchmapに未登録の論文を発見。researchmapのインポートにそのまま渡せるファイルを書き出せます。',
+          counter: 'researchmapに見つからない論文: 7件',
+          rows: ['2019 — Artificial Neural Network for Vertical…', '2018 — Buckling strength of thin-walled steel…'],
+        },
+        f4: {
+          title: '共有カード',
+          desc: 'サマリーを1200×675のPNGに書き出し。画像はブラウザ内で生成され、出典と取得時点が含まれます。',
+          cardLabel: 'DOI登録',
+        },
+      }
+    : {
+        heading: 'Features',
+        f1: {
+          title: 'Per-paper badges',
+          desc: 'Citation counts (OpenAlex), links to OA full text, and DOIs on every publication. Hover to see the source and retrieval date.',
+        },
+        f2: {
+          title: 'Summary card',
+          desc: 'Papers in the last 5 years, citations, OA, and DOI coverage — one card at the top of the profile. Rates are shown as "X / Y".',
+          tiles: [
+            { value: '114', label: 'Papers, last 5 yrs' },
+            { value: '104 / 303', label: 'With DOI (34%)' },
+          ],
+        },
+        f3: {
+          title: 'Maintenance report',
+          desc: 'Cross-checks the OpenAlex author record or your own Google Scholar BibTeX to find papers missing from researchmap — and exports a file you can feed straight into researchmap import.',
+          counter: 'Papers not found on researchmap: 7',
+          rows: ['2019 — Artificial Neural Network for Vertical…', '2018 — Buckling strength of thin-walled steel…'],
+        },
+        f4: {
+          title: 'Share card',
+          desc: 'Export the summary as a 1200×675 PNG, generated entirely inside your browser, with sources and date included.',
+          cardLabel: 'With DOI',
+        },
+      };
+---
+
+<section id="features" class="section">
+  <div class="container">
+    <h2 class="section-title">{t.heading}</h2>
+
+    <div class="grid">
+      <!-- 1. 論文バッジ -->
+      <div class="card">
+        <div class="visual">
+          <div class="badge-row">
+            <span class="kl-glyph" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 12 12">
+                <circle cx="5" cy="5" r="3.4" fill="none" stroke="#98a2b3" stroke-width="1.5"></circle>
+                <line x1="7.8" y1="7.8" x2="10.6" y2="10.6" stroke="#98a2b3" stroke-width="1.6" stroke-linecap="round"></line>
+              </svg>
+            </span>
+            <span class="kl-pill kl-cite">❝ 27</span>
+            <span class="kl-pill kl-oa">OA</span>
+            <span class="kl-pill kl-doi">DOI</span>
+            <span class="kl-pill kl-hint">✎ DOI</span>
+          </div>
+        </div>
+        <h3>{t.f1.title}</h3>
+        <p>{t.f1.desc}</p>
+      </div>
+
+      <!-- 2. サマリーカード -->
+      <div class="card">
+        <div class="visual">
+          <div class="mini-card">
+            <div class="mini-grad"></div>
+            <div class="mini-tiles">
+              {
+                t.f2.tiles.map((tile) => (
+                  <div class="mini-tile">
+                    <span class="mini-value">{tile.value}</span>
+                    <span class="mini-label">{tile.label}</span>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+        <h3>{t.f2.title}</h3>
+        <p>{t.f2.desc}</p>
+      </div>
+
+      <!-- 3. 整備レポート -->
+      <div class="card">
+        <div class="visual">
+          <div class="report-mock">
+            <p class="report-counter">{t.f3.counter}</p>
+            {
+              t.f3.rows.map((row) => (
+                <div class="report-row">
+                  <span class="report-checkbox" aria-hidden="true" />
+                  <span class="report-text">{row}</span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+        <h3>{t.f3.title}</h3>
+        <p>{t.f3.desc}</p>
+      </div>
+
+      <!-- 4. 共有カード -->
+      <div class="card">
+        <div class="visual">
+          <div class="share-mock">
+            <div class="mini-grad"></div>
+            <div class="share-body">
+              <span class="share-value">104 / 303</span>
+              <span class="share-label">{t.f4.cardLabel} (34%)</span>
+            </div>
+          </div>
+        </div>
+        <h3>{t.f4.title}</h3>
+        <p>{t.f4.desc}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 28px;
+  }
+
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 22px 18px;
+    background: var(--panel);
+  }
+
+  /* ---- 視覚モック共通 (製品はライトテーマ固定なので配色も固定) ---- */
+  .visual {
+    display: flex;
+    align-items: center;
+    min-height: 96px;
+    margin-bottom: 14px;
+    padding: 14px;
+    border-radius: 10px;
+    background: #f4f6f8;
+  }
+
+  h3 {
+    font-size: 17px;
+    margin: 0 0 6px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.85;
+    color: var(--ink-soft);
+  }
+
+  /* バッジ行 */
+  .badge-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+
+  .kl-glyph {
+    display: inline-flex;
+    opacity: 0.6;
+  }
+
+  .kl-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 11px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .kl-cite { color: #0b5e57; background: #e6f4f2; }
+  .kl-oa { color: #15693b; background: #e7f6ec; }
+  .kl-doi { color: #3a5276; background: #eef2f8; }
+  .kl-hint { color: #5d6b7e; background: #ffffff; border: 1px dashed #8a94a4; }
+
+  /* サマリーカード ミニ */
+  .mini-card,
+  .share-mock {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #e4e7ec;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .mini-grad {
+    height: 3px;
+    background: var(--gradient);
+  }
+
+  .mini-tiles {
+    display: flex;
+  }
+
+  .mini-tile {
+    flex: 1;
+    padding: 10px 14px;
+  }
+
+  .mini-tile + .mini-tile {
+    border-left: 1px solid #e4e7ec;
+  }
+
+  .mini-value,
+  .share-value {
+    display: block;
+    font-size: 19px;
+    font-weight: 700;
+    color: #1f2937;
+  }
+
+  .mini-label,
+  .share-label {
+    display: block;
+    margin-top: 1px;
+    font-size: 11.5px;
+    color: #667085;
+  }
+
+  /* 整備レポート ミニ */
+  .report-mock {
+    width: 100%;
+  }
+
+  .report-counter {
+    margin: 0 0 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #1f2937;
+  }
+
+  .report-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid #e4e7ec;
+    padding: 7px 10px;
+    font-size: 12px;
+    color: #1f2937;
+  }
+
+  .report-row:first-of-type {
+    border-radius: 8px 8px 0 0;
+  }
+
+  .report-row + .report-row {
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .report-checkbox {
+    width: 13px;
+    height: 13px;
+    border: 1.5px solid #98a2b3;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .report-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 共有カード ミニ */
+  .share-mock {
+    max-width: 220px;
+  }
+
+  .share-body {
+    padding: 12px 16px;
+  }
+
+  @media (max-width: 720px) {
+    .grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
+</style>
