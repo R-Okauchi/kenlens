@@ -25,7 +25,7 @@ const subPhrases =
 const t =
   lang === 'ja'
     ? {
-        cta: 'Chromeに追加 (近日公開)',
+        cta: 'Chromeに追加',
         ctaSub: 'ソースコードを見る',
         panelTitle: '論文',
         papers: [
@@ -51,7 +51,7 @@ const t =
         hintLabel: 'DOI候補',
       }
     : {
-        cta: 'Add to Chrome (coming soon)',
+        cta: 'Add to Chrome',
         ctaSub: 'View the source',
         panelTitle: 'Published papers',
         papers: [
@@ -87,8 +87,7 @@ const t =
       </p>
       <p class="disclaimer">{DISCLAIMER[lang]}</p>
       <div class="cta-row">
-        <!-- data-cws-link: replace href with the Chrome Web Store listing URL once published -->
-        <a class="cta" href="#" data-cws-link>{t.cta}</a>
+        <a class="cta" href="https://chromewebstore.google.com/detail/naccpnjaahllelmoijpcepnpkpamabec" target="_blank" rel="noopener noreferrer">{t.cta}</a>
         <a
           class="cta-sub"
           href="https://github.com/R-Okauchi/kenlens"

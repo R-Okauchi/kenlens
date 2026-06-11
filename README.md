@@ -7,6 +7,10 @@ researchmap の研究者ページに、被引用数・オープンアクセス�
 
 A browser extension that overlays citation counts, open access status, and DOI information on researchmap researcher profiles. **This is not research evaluation** — it visualizes public metadata and supports profile maintenance.
 
+## インストール
+
+[Chrome ウェブストアから追加](https://chromewebstore.google.com/detail/naccpnjaahllelmoijpcepnpkpamabec)
+
 ## 機能
 
 - **見える** — 論文ごとに被引用数 (OpenAlex) と OA 本文リンク (Unpaywall) をバッジ表示
