@@ -1,7 +1,7 @@
 /**
  * OpenAlex クライアント。
- * - DOI 単体 lookup は無料・無制限 (2026-06 実測) → 既定経路。匿名 $1/日枠を消費しない
- * - API キー設定時のみバッチ (filter=doi: ≤100件) を使う
+ * - 2 件以上はバッチ (filter=doi: ≤100件) を既定とし、失敗時は単体 lookup へフォールバック
+ * - 単体 lookup は無料・無制限 (2026-06 実測)。バッチは匿名 $1/日枠を消費するが余裕が大きい
  * - 404 は HTML を返す (実測) — politeFetch が HttpError を投げるので JSON パースには到達しない
  */
 import { HttpError, politeFetch } from '../net/queue';
@@ -150,13 +150,15 @@ export async function fetchAuthorWorks(
 }
 
 /**
- * バッチ lookup (API キー設定時のみ呼ぶ)。
+ * バッチ lookup (List+Filter)。キー無しの匿名枠 ($1/日 ≈ 1万コール/日・実測) でも
+ * 通常利用 (数十プロフィール/日 ≈ 数百コール) には 1 桁以上の余裕があるため既定経路とする。
+ * 失敗時は呼び出し側が単体 lookup (無料・無制限) にフォールバックする。
  * 返り値は DOI → work。未収録 DOI はマップに現れない (= 呼び出し側で 404 相当として扱う)。
  * パイプ文字を含む DOI は filter 構文を壊すため除外する (呼び出し側で単体 lookup に回す)。
  */
 export async function fetchOpenAlexBatch(
   dois: readonly string[],
-  apiKey: string,
+  apiKey: string | null,
 ): Promise<Map<string, OpenAlexWork>> {
   const result = new Map<string, OpenAlexWork>();
   const batchable = dois.filter((d) => !d.includes('|') && !d.includes(','));

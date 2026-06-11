@@ -48,6 +48,11 @@ export class PageController {
     return this.loadPromise;
   }
 
+  /** UI マウント (CSS 取得込み) を待たずに researchmap 取得を先行開始する */
+  prefetch(): void {
+    void this.kickoff();
+  }
+
   /** anchors.ts から呼ばれる。published_papers の rmId 付き item のみ受け付ける */
   register(items: ParsedListItem[]): void {
     const fresh: RegisteredItem[] = [];
@@ -138,9 +143,10 @@ export class PageController {
    * 可視アイテム経由で取得済みの DOI はスキップ (bg 側キャッシュもあるが往復を省く)。
    */
   private async enrichRemainingForSummary(): Promise<void> {
-    if (!this.summary) return;
+    const summary = this.summary;
+    if (!summary) return;
     if (this.mode !== 'api' || !this.publications) {
-      this.summary.setEnrichComplete();
+      summary.setEnrichComplete();
       return;
     }
     const remaining: string[] = [];
@@ -152,16 +158,18 @@ export class PageController {
         }
       }
     }
+    const jobs: Promise<void>[] = [];
     for (let i = 0; i < remaining.length; i += ENRICH_CHUNK_SIZE) {
       const chunk = remaining.slice(i, i + ENRICH_CHUNK_SIZE);
-      try {
-        const result = await sendMessage('enrichDois', { dois: chunk });
-        this.summary.mergeEnrichments(result);
-      } catch {
-        // 一部チャンクの失敗はサマリーのカバレッジ表記で吸収される
-      }
+      jobs.push(
+        sendMessage('enrichDois', { dois: chunk })
+          .then((result) => summary.mergeEnrichments(result))
+          // 一部チャンクの失敗はサマリーのカバレッジ表記で吸収される
+          .catch(() => {}),
+      );
     }
-    this.summary.setEnrichComplete();
+    await Promise.all(jobs);
+    summary.setEnrichComplete();
   }
 
   private async processItems(entries: RegisteredItem[]): Promise<void> {
@@ -170,8 +178,11 @@ export class PageController {
       return;
     }
 
-    const toEnrich: { rmId: string; doi: string; viaCandidate: boolean }[] = [];
+    const toEnrich: { rmId: string; doi: string }[] = [];
+    const titleTasks: RegisteredItem[] = [];
 
+    // パス 1 (同期): 突合と振り分けのみ。タイトル照合をここで await すると、
+    // 無関係な DOI 持ち論文のバッジまで照合の分だけ遅れるため後段に回す
     for (const { rmId, item } of entries) {
       const pub = this.publications?.get(rmId) ?? null;
 
@@ -192,15 +203,30 @@ export class PageController {
         });
 
         if (doi) {
-          toEnrich.push({ rmId, doi, viaCandidate: false });
+          toEnrich.push({ rmId, doi });
           continue;
         }
       } else if (this.mode === 'api') {
         this.store.update(rmId, { matchStatus: 'unmatched' });
       }
 
-      // DOI なし (または API 不可): 欧文タイトルのみ Crossref 照合を試す
+      // DOI なし (または API 不可): 欧文タイトルのみ Crossref 照合の対象にする
       if (isLatinTitle(item.pub.title)) {
+        titleTasks.push({ rmId, item });
+      } else {
+        this.store.update(rmId, { phase: 'ready' });
+      }
+    }
+
+    // DOI 持ちを先に確定させる (体感速度の主役)。タイトル照合はこの後に回す —
+    // 同時に走らせると照合クエリが Crossref キューを埋め、チャンク内の
+    // Crossref フォールバック (OpenAlex 未収録 DOI) がその後ろに並んで
+    // チャンク完了ごと数秒ブロックされるため
+    await this.enrichChunks(toEnrich);
+
+    const resolvedToEnrich: { rmId: string; doi: string }[] = [];
+    await Promise.all(
+      titleTasks.map(async ({ rmId, item }) => {
         try {
           const resolved = await sendMessage('resolveTitleDoi', {
             title: item.pub.title,
@@ -209,40 +235,52 @@ export class PageController {
           });
           if (resolved.doi) {
             this.store.update(rmId, { doiCandidate: resolved.doi });
-            toEnrich.push({ rmId, doi: resolved.doi, viaCandidate: true });
-            continue;
+            resolvedToEnrich.push({ rmId, doi: resolved.doi });
+            return;
           }
         } catch {
           // 照合失敗は no-data として扱う (エラー表示にしない)
         }
-      }
-      this.store.update(rmId, { phase: 'ready' });
-    }
+        this.store.update(rmId, { phase: 'ready' });
+      }),
+    );
+    await this.enrichChunks(resolvedToEnrich);
+  }
 
-    // DOI チャンクごとにエンリッチし、到着順に描画を確定する
-    for (let i = 0; i < toEnrich.length; i += ENRICH_CHUNK_SIZE) {
-      const chunk = toEnrich.slice(i, i + ENRICH_CHUNK_SIZE);
-      try {
-        const dois = [...new Set(chunk.map((c) => c.doi))];
-        for (const doi of dois) this.enrichedDois.add(doi);
-        const result = await sendMessage('enrichDois', { dois });
-        this.summary?.mergeEnrichments(result);
-        for (const { rmId, doi } of chunk) {
-          const record = result[doi];
-          if (record) {
-            this.store.update(rmId, {
-              phase: 'ready',
-              enrichment: record,
-              fetchedAt: record.fetchedAt,
-            });
-          } else {
-            // pipeline がトランスポート失敗で省いた DOI → 再試行可能なエラー表示
-            this.store.update(rmId, { phase: 'error' });
-          }
+  /**
+   * DOI をチャンクに割り、全チャンクを並列に要求して到着順に描画を確定する。
+   * 直列だと 1 チャンク内の低速 DOI が次チャンクのバッチ発射を人質に取る。
+   * レート制限は bg 側のホスト別キューが守るので並列発射してよい。
+   */
+  private async enrichChunks(targets: readonly { rmId: string; doi: string }[]): Promise<void> {
+    const jobs: Promise<void>[] = [];
+    for (let i = 0; i < targets.length; i += ENRICH_CHUNK_SIZE) {
+      jobs.push(this.enrichChunk(targets.slice(i, i + ENRICH_CHUNK_SIZE)));
+    }
+    await Promise.all(jobs);
+  }
+
+  private async enrichChunk(chunk: readonly { rmId: string; doi: string }[]): Promise<void> {
+    try {
+      const dois = [...new Set(chunk.map((c) => c.doi))];
+      for (const doi of dois) this.enrichedDois.add(doi);
+      const result = await sendMessage('enrichDois', { dois });
+      this.summary?.mergeEnrichments(result);
+      for (const { rmId, doi } of chunk) {
+        const record = result[doi];
+        if (record) {
+          this.store.update(rmId, {
+            phase: 'ready',
+            enrichment: record,
+            fetchedAt: record.fetchedAt,
+          });
+        } else {
+          // pipeline がトランスポート失敗で省いた DOI → 再試行可能なエラー表示
+          this.store.update(rmId, { phase: 'error' });
         }
-      } catch {
-        for (const { rmId } of chunk) this.store.update(rmId, { phase: 'error' });
       }
+    } catch {
+      for (const { rmId } of chunk) this.store.update(rmId, { phase: 'error' });
     }
   }
 }

@@ -89,7 +89,7 @@ async function enrichOne(doi: string, apiKey: string | null): Promise<Enrichment
 
 /**
  * DOI 群のエンリッチ。失敗した DOI は結果マップから省かれる。
- * API キー設定時はバッチで先に温め、未ヒット分のみ単体経路に流す。
+ * 2 件以上はバッチで先に温め (1 リクエスト/100 DOI)、未ヒット分のみ単体経路に流す。
  */
 export async function enrichDois(
   dois: readonly string[],
@@ -107,7 +107,8 @@ export async function enrichDois(
   }
   pending = uncached;
 
-  if (apiKey && pending.length > 1) {
+  // バッチ既定: 20 DOI が 1 リクエストで返る (匿名枠でも余裕、失敗時は単体へ)
+  if (pending.length > 1) {
     try {
       const batch = await fetchOpenAlexBatch(pending, apiKey);
       for (const [doi, work] of batch) {
@@ -117,7 +118,7 @@ export async function enrichDois(
       }
       pending = pending.filter((doi) => !batch.has(doi));
     } catch {
-      // バッチ失敗は単体経路にフォールバック
+      // バッチ失敗 (429/クォータ/仕様変更) は単体経路 (無料・無制限) にフォールバック
     }
   }
 

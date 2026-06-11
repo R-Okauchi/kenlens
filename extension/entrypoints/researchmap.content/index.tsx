@@ -31,6 +31,9 @@ interface MountedRow {
 
 export default defineContentScript({
   matches: ['https://researchmap.jp/*'],
+  // researchmap は完全 SSR — 既定の document_idle (load 後) を待つ必要がなく、
+  // DOMContentLoaded 直後に開始して初回表示を前倒しする
+  runAt: 'document_end',
   cssInjectionMode: 'ui',
 
   async main(ctx) {
@@ -43,6 +46,8 @@ export default defineContentScript({
     const store = new ItemStore();
     const summaryModel = new SummaryModel();
     const controller = new PageController(page, store, summaryModel);
+    // researchmap 取得はカード/バッジのマウント (CSS 取得込み) を待たずに開始する
+    controller.prefetch();
 
     const mountedRows = new Map<string, MountedRow>();
     let summaryUi: { remove: () => void } | null = null;

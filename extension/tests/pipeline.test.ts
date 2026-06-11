@@ -151,3 +151,48 @@ describe.skipIf(!fixturesAvailable())('resolveTitleDoi', () => {
     expect(fetchMock.mock.calls.length).toBe(calls);
   });
 });
+
+describe('enrichDois: バッチ既定 (fixtures 不要)', () => {
+  it('2 件以上はバッチ 1 リクエストで取得し、単体 lookup を発行しない', async () => {
+    const calls: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        calls.push(url);
+        return Promise.resolve(
+          json({
+            results: [
+              { id: 'https://openalex.org/W1', doi: 'https://doi.org/10.1234/a', cited_by_count: 5, open_access: { is_oa: false } },
+              { id: 'https://openalex.org/W2', doi: 'https://doi.org/10.1234/b', cited_by_count: 7, open_access: { is_oa: true, oa_url: 'https://x/1' } },
+            ],
+          }),
+        );
+      }),
+    );
+    const result = await enrichDois(['10.1234/a', '10.1234/b']);
+    expect(result['10.1234/a']!.citedByCount).toBe(5);
+    expect(result['10.1234/b']!.citedByCount).toBe(7);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toContain('filter=doi');
+  });
+
+  it('バッチ失敗時は単体 lookup へフォールバックする', async () => {
+    const calls: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        calls.push(url);
+        if (url.includes('filter=doi')) {
+          return Promise.resolve(new Response('{}', { status: 403 })); // 4xx は即時失敗
+        }
+        return Promise.resolve(
+          json({ id: 'https://openalex.org/W1', doi: url.includes('10.1234%2Fa') ? 'https://doi.org/10.1234/a' : 'https://doi.org/10.1234/b', cited_by_count: 3, open_access: { is_oa: false } }),
+        );
+      }),
+    );
+    const result = await enrichDois(['10.1234/a', '10.1234/b']);
+    expect(result['10.1234/a']!.found).toBe(true);
+    expect(result['10.1234/b']!.found).toBe(true);
+    expect(calls.filter((u) => u.includes('/works/doi:'))).toHaveLength(2);
+  });
+});
