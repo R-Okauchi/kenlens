@@ -8,6 +8,7 @@
  * - DOI 未登録は「率を上げろ」ではなく「ここを直せます」の導線にする
  */
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { sendMessage } from '@/lib/messaging/protocol';
 import { useI18n } from '@/lib/i18n';
 import { computeSummary } from '@/lib/metrics/summary';
 import type { PageContext } from '@/lib/researchmap/types';
@@ -257,14 +258,25 @@ export function SummaryCard({
                 />
               </div>
 
-              {metrics && metrics.doi.missingRmIds.length > 0 && (
-                <div className="px-4 pb-1.5">
+              {metrics && (
+                <div className="flex flex-wrap gap-x-5 px-4 pb-1.5">
+                  {metrics.doi.missingRmIds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => jumpToMissingDoi(ctx, metrics.doi.missingRmIds)}
+                      className="cursor-pointer border-0 bg-transparent p-0 text-sm text-brand underline outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                    >
+                      {t('metric_doi_cta', { n: metrics.doi.missingRmIds.length })}
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => jumpToMissingDoi(ctx, metrics.doi.missingRmIds)}
+                    onClick={() =>
+                      void sendMessage('openReport', { permalink: ctx.permalink })
+                    }
                     className="cursor-pointer border-0 bg-transparent p-0 text-sm text-brand underline outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                   >
-                    {t('metric_doi_cta', { n: metrics.doi.missingRmIds.length })}
+                    {t('report_open')}
                   </button>
                 </div>
               )}

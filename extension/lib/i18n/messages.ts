@@ -81,6 +81,40 @@ const ja = {
   summary_degraded: '限定モード: 表示中のページから算出しています',
   summary_load_all: '全件を読み込む',
 
+  // --- 整備レポート (v0.3) ---
+  report_open: '整備レポートを開く →',
+  report_title: '整備レポート',
+  report_lead:
+    '外部データベースとの突合で、researchmapに未登録の可能性がある論文を探します。候補はあくまで照合結果です — 登録の判断はご本人がお願いします。',
+  report_target: '対象プロフィール',
+  report_loading: 'researchmapの業績を読み込んでいます…',
+  report_unavailable:
+    'researchmapのデータを取得できませんでした。設定が「ページ内データのみ」になっている場合は「標準」に戻してください。',
+  report_sec_openalex: 'OpenAlexの著者レコードとの突合',
+  report_openalex_running: 'OpenAlexで著者を推定しています… (最大1分ほどかかります)',
+  report_author_found: '推定された著者: {name} — OpenAlex収録 {works}件 (照合 {votes}/{samples}件で一致)',
+  report_author_caution:
+    '同名研究者の論文が混ざる可能性があります。チェックを入れる前に必ず内容をご確認ください。',
+  report_author_none:
+    '著者を推定できませんでした (DOI照合済みの論文が少ないプロフィールでは推定できないことがあります)。下のBibTeX突合をご利用ください。',
+  report_sec_bibtex: 'BibTeXファイルとの突合',
+  report_bibtex_hint:
+    'Google Scholarのプロフィールはご本人なら全業績をBibTeXでエクスポートできます (プロフィール → 記事を選択 → エクスポート)。そのファイルを選ぶか、内容を貼り付けてください。ファイルはブラウザ内でのみ処理されます。',
+  report_bibtex_pick: 'BibTeXファイルを選択',
+  report_bibtex_paste: 'ここにBibTeXを貼り付け',
+  report_bibtex_parsed: '{n}件のエントリを読み込みました',
+  report_bibtex_error: 'BibTeXを解析できませんでした。形式をご確認ください。',
+  report_missing: 'researchmapに見つからない論文: {n}件 (登録済みと判定: {matched}件)',
+  report_no_missing: '差分は見つかりませんでした — researchmapはこのソースと同期できています。',
+  report_select_all: 'すべて選択',
+  report_select_none: '選択を解除',
+  report_download: '選択した{n}件のBibTeXをダウンロード',
+  report_import_hint:
+    'ダウンロードした .bib は、researchmapの「業績の登録 → インポート」から取り込めます (ご本人のログインが必要です)。',
+  report_col_year: '年',
+  report_col_title: 'タイトル',
+  report_col_venue: '掲載誌',
+
   // --- 共有カード ---
   share_open: '画像で共有',
   share_dialog_title: '共有カード',
@@ -202,6 +236,40 @@ const en: Messages = {
   summary_empty: 'No public publications registered',
   summary_degraded: 'Limited mode: computed from the visible page',
   summary_load_all: 'Load all',
+
+  report_open: 'Open maintenance report →',
+  report_title: 'Maintenance report',
+  report_lead:
+    'Finds papers that may be missing from researchmap by cross-checking external databases. Candidates are matching results only — please decide on registration yourself.',
+  report_target: 'Target profile',
+  report_loading: 'Loading publications from researchmap…',
+  report_unavailable:
+    'Could not fetch researchmap data. If the mode is set to "Page data only", switch it back to "Standard".',
+  report_sec_openalex: 'Cross-check with the OpenAlex author record',
+  report_openalex_running: 'Inferring the author on OpenAlex… (may take up to a minute)',
+  report_author_found:
+    'Inferred author: {name} — {works} works on OpenAlex (matched in {votes}/{samples} samples)',
+  report_author_caution:
+    'Works by researchers with the same name may be mixed in. Please verify each item before checking it.',
+  report_author_none:
+    'Could not infer the author (this can happen for profiles with few DOI-matched papers). Try the BibTeX cross-check below.',
+  report_sec_bibtex: 'Cross-check with a BibTeX file',
+  report_bibtex_hint:
+    'On Google Scholar, you can export all your own works as BibTeX (profile → select articles → export). Pick that file or paste its contents. Files are processed entirely inside your browser.',
+  report_bibtex_pick: 'Choose BibTeX file',
+  report_bibtex_paste: 'Paste BibTeX here',
+  report_bibtex_parsed: 'Parsed {n} entries',
+  report_bibtex_error: 'Could not parse the BibTeX. Please check the format.',
+  report_missing: 'Papers not found on researchmap: {n} (judged already registered: {matched})',
+  report_no_missing: 'No gaps found — researchmap is in sync with this source.',
+  report_select_all: 'Select all',
+  report_select_none: 'Clear selection',
+  report_download: 'Download BibTeX for {n} selected',
+  report_import_hint:
+    'The downloaded .bib can be imported via researchmap "業績の登録 → インポート" (owner login required).',
+  report_col_year: 'Year',
+  report_col_title: 'Title',
+  report_col_venue: 'Venue',
 
   share_open: 'Share as image',
   share_dialog_title: 'Share card',

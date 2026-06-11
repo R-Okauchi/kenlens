@@ -333,6 +333,45 @@ try {
   await options.close();
 
   // -------------------------------------------------------------------------
+  step('P7: 整備レポート (v0.3)');
+  const report = await context.newPage();
+  await report.goto(`chrome-extension://${extId}/report.html?permalink=${STEM}`);
+  await report.locator('h1').waitFor({ timeout: 10_000 });
+
+  // OpenAlex 著者推定 + 全論文取得の完了を待つ (researchmap キャッシュ済みなら数十秒)
+  await report
+    .locator('text=/推定された著者|Inferred author|推定できませんでした|Could not infer/')
+    .first()
+    .waitFor({ timeout: 180_000 });
+  const reportBody = await report.innerText('body');
+  check('著者が推定される', /推定された著者|Inferred author/.test(reportBody), reportBody.slice(0, 300));
+  check(
+    '未登録候補リストが出る',
+    /researchmapに見つからない論文|not found on researchmap|差分は見つかりませんでした|No gaps found/.test(reportBody),
+  );
+  check('同名混入の注意書きがある', /同名研究者|same name/.test(reportBody));
+
+  // BibTeX 突合 (架空エントリ → 1件解析 → 差分に出る)
+  await report
+    .locator('textarea')
+    .fill(
+      '@article{yamada2024fict, title={A Totally Fictitious Paper for E2E}, author={Yamada, Taro}, journal={Test Journal}, year={2024}}',
+    );
+  await report.waitForTimeout(1_000); // parse debounce
+  const afterBibtex = await report.innerText('body');
+  check('BibTeX が解析される', /1件のエントリ|Parsed 1 entr/.test(afterBibtex), afterBibtex.slice(-300));
+
+  const firstCheckbox = report.locator('input[type="checkbox"]').first();
+  await firstCheckbox.check();
+  const dlButton = report
+    .locator('button')
+    .filter({ hasText: /BibTeXをダウンロード|Download BibTeX/ })
+    .first();
+  check('選択するとダウンロードボタンが有効になる', await dlButton.isEnabled());
+  await report.screenshot({ path: join(SHOTS, '09-report.png') });
+  await report.close();
+
+  // -------------------------------------------------------------------------
   const failed = results.filter((r) => !r.ok);
   console.log(`\n結果: ${results.length - failed.length}/${results.length} passed`);
   if (failed.length > 0) {

@@ -12,6 +12,8 @@ export const TTL = {
   enrich: 7 * 24 * 60 * 60 * 1000,
   /** タイトル→DOI 照合 (ネガティブ含む) */
   title: 30 * 24 * 60 * 60 * 1000,
+  /** 整備レポート (著者推定 + 著者の全論文) */
+  report: 24 * 60 * 60 * 1000,
 } as const;
 
 const PREFIX = 'kl:cache:';

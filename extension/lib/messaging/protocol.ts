@@ -11,6 +11,7 @@ import type {
   ModeReason,
   TitleResolution,
 } from '../researchmap/types';
+import type { AuthorWorksResult } from '../report/types';
 
 export interface ProtocolMap {
   /** researchmap 業績一覧 (キャッシュ優先、1ページビューにつき 1 回) */
@@ -32,6 +33,15 @@ export interface ProtocolMap {
   getMode(): { mode: DataMode; reason: ModeReason };
   clearCache(): { clearedEntries: number };
   getCacheStats(): { entries: number; approxBytes: number };
+
+  /**
+   * 整備レポート: OpenAlex 著者推定 + その著者の全論文 (researchmap との diff は
+   * 呼び出し側の純関数で行う)。推定不能・DOM-only モード時は null
+   */
+  buildAuthorReport(data: { permalink: string }): AuthorWorksResult | null;
+
+  /** content script からレポートページをタブで開く (CS は拡張ページを直接開けない) */
+  openReport(data: { permalink: string }): void;
 }
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

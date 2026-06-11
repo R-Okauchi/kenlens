@@ -13,6 +13,8 @@ import {
 } from '../flags/flags';
 import { onMessage } from '../messaging/protocol';
 import { BreakerOpenError, HttpError } from '../net/queue';
+import { buildAuthorReport } from '../report/author';
+import type { AuthorWorksResult } from '../report/types';
 import {
   PrivateProfileError,
   RmApiBrokenError,
@@ -109,6 +111,30 @@ export function registerBackgroundHandlers(): void {
   onMessage('clearCache', async () => ({ clearedEntries: await clearAll() }));
 
   onMessage('getCacheStats', () => stats());
+
+  onMessage('buildAuthorReport', async ({ data }) => {
+    const key = cacheKey('report', data.permalink);
+    const cached = await cacheGetWithAge<AuthorWorksResult | null>(key, TTL.report);
+    if (cached) return cached.value;
+
+    const pubs = await getPublications(data.permalink, false);
+    if (pubs.source === 'unavailable') return null;
+    const dois = [...new Set(pubs.papers.flatMap((p) => p.dois))];
+    if (dois.length === 0) return null;
+
+    const report = await buildAuthorReport(dois);
+    // 推定失敗 (null) はキャッシュしない — 一時的な API 不調でも 24h 再試行不能になるため
+    if (report !== null) await cacheSet(key, report);
+    return report;
+  });
+
+  onMessage('openReport', ({ data }) => {
+    void browser.tabs.create({
+      url: browser.runtime.getURL(
+        `/report.html?permalink=${encodeURIComponent(data.permalink)}` as '/report.html',
+      ),
+    });
+  });
 
   // 日次: キャッシュ退避 + リモート設定 (キルスイッチ) 更新
   void ensureAlarm(ALARM_EVICTION, 24 * 60);
