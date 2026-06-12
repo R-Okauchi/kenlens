@@ -93,6 +93,48 @@ export function normalizePaper(raw: RmPaperRaw): Publication | null {
   };
 }
 
+/** カテゴリごとのタイトルフィールド名 (API 実応答で確認済み) */
+export const RM_TITLE_KEYS = {
+  misc: 'paper_title',
+  books_etc: 'book_title',
+  presentations: 'presentation_title',
+} as const;
+
+export type RmOtherCategory = keyof typeof RM_TITLE_KEYS;
+
+interface RmGenericItemRaw {
+  paper_title?: RmLocalized;
+  book_title?: RmLocalized;
+  presentation_title?: RmLocalized;
+  identifiers?: { doi?: string[] };
+  see_also?: RmSeeAlso[];
+}
+
+/**
+ * misc / books_etc / presentations の item → タイトル + DOI の軽量索引。
+ * 整備レポートの突合にしか使わないため Publication への正規化はしない。
+ */
+export function normalizeTitleDoiList(
+  json: { items?: RmGenericItemRaw[] },
+  category: RmOtherCategory,
+): { titles: string[]; dois: string[]; rawCount: number } {
+  const titleKey = RM_TITLE_KEYS[category];
+  const titles: string[] = [];
+  const doiCandidates: string[] = [];
+  for (const item of json.items ?? []) {
+    const title = item[titleKey];
+    for (const t of [title?.ja, title?.en]) {
+      const trimmed = t?.trim();
+      if (trimmed) titles.push(trimmed);
+    }
+    doiCandidates.push(...(item.identifiers?.doi ?? []));
+    for (const link of item.see_also ?? []) {
+      if (link.label === 'doi' && link['@id']) doiCandidates.push(link['@id']);
+    }
+  }
+  return { titles, dois: dedupeDois(doiCandidates), rawCount: json.items?.length ?? 0 };
+}
+
 export function normalizeListResponse(json: RmListResponse): {
   totalItems: number;
   papers: Publication[];

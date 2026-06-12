@@ -1,23 +1,28 @@
 ---
 import '../styles/global.css';
 
-// Tagline mirrored from packages/shared/src/disclaimer.ts (TAGLINE) — keep in sync.
-const TAGLINE = {
-  ja: '業績が、見える。整う。つながる。',
-  en: 'See it. Tidy it. Connect it.',
-} as const;
-
 interface Props {
   lang: 'ja' | 'en';
   title: string;
   description: string;
+  path: string;
+  alternatePath: string;
 }
 
-const { lang, title, description } = Astro.props;
+const { lang, title, description, path, alternatePath } = Astro.props;
 // BASE_URL は base 設定時に末尾スラッシュ無し ('/kenlens') になるため必ず正規化する
 const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL
   : `${import.meta.env.BASE_URL}/`;
+const site = Astro.site?.toString() ?? 'https://r-okauchi.github.io';
+const siteRoot = site.endsWith('/') ? site : `${site}/`;
+const absoluteUrl = (pagePath: string) => {
+  const normalizedPath = pagePath.replace(/^\/+/, '');
+  return new URL(`${base}${normalizedPath}`, siteRoot).toString();
+};
+const canonicalUrl = absoluteUrl(path);
+const jaUrl = lang === 'ja' ? canonicalUrl : absoluteUrl(alternatePath);
+const enUrl = lang === 'en' ? canonicalUrl : absoluteUrl(alternatePath);
 ---
 
 <!doctype html>
@@ -27,9 +32,14 @@ const base = import.meta.env.BASE_URL.endsWith('/')
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta property="og:title" content="研レンズ — KenLens" />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" hreflang="ja" href={jaUrl} />
+    <link rel="alternate" hreflang="en" href={enUrl} />
+    <link rel="alternate" hreflang="x-default" href={jaUrl} />
+    <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
     <meta property="og:site_name" content="研レンズ — KenLens" />
     <meta name="theme-color" content="#0F766E" />
     <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />

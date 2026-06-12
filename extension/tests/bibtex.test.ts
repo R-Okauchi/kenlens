@@ -91,6 +91,14 @@ describe('parseBibtex', () => {
     expect(entries[0]!.fields['title']).toBe('Health & Safety: 100% _Coverage_');
   });
 
+  it(String.raw`LaTeX のアクセント/文字コマンドを Unicode に戻す`, () => {
+    const entries = parseBibtex(
+      String.raw`@article{key4, author={M{\"u}ller, J{\'o}zsef and Stra{\ss}e, Ana}, title={On \'{E}lites and {\o}resund}, year={2022}}`,
+    );
+    expect(entries[0]!.fields['author']).toBe('Müller, József and Straße, Ana');
+    expect(entries[0]!.fields['title']).toBe('On Élites and øresund');
+  });
+
   it('@comment / @preamble / @string と % コメント行を読み飛ばす', () => {
     const entries = parseBibtex(`% exported by a fictitious tool
 @comment{ここは {入れ子} 込みで無視される}

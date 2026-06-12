@@ -20,6 +20,7 @@ const t =
         sub: '論文ごとのバッジ、プロフィールのサマリー、未登録の論文を見つける整備レポート。無料・オープンソースのChrome拡張です。',
         cta: 'Chromeに追加',
         ctaSub: 'GitHub',
+        mockLabel: 'KenLensのバッジを表示したresearchmapページのモック',
         panelTitle: '論文',
         papers: [
           {
@@ -45,6 +46,7 @@ const t =
         sub: 'Per-paper badges, a profile summary, and a maintenance report that finds papers missing from researchmap. A free, open-source Chrome extension.',
         cta: 'Add to Chrome',
         ctaSub: 'GitHub',
+        mockLabel: 'researchmap page with KenLens badges (mock)',
         panelTitle: 'Published papers',
         papers: [
           {
@@ -87,7 +89,7 @@ const t =
     </div>
 
     <!-- researchmap (Bootstrap 3) パネルの実寸風モック。ホストページは常にライトテーマ -->
-    <figure class="mock" aria-label="researchmap page with KenLens badges (mock)">
+    <figure class="mock" aria-label={t.mockLabel}>
       <div class="rm-panel">
         <div class="rm-panel-heading">
           {t.panelTitle}

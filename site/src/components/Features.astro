@@ -12,6 +12,7 @@ const t =
         f1: {
           title: '論文ごとのバッジ',
           desc: '被引用数 (OpenAlex)・OA本文へのリンク・DOIを各論文に。カーソルを合わせると出典と取得時点が見えます。',
+          hintLabel: 'DOI候補',
         },
         f2: {
           title: 'サマリーカード',
@@ -38,6 +39,7 @@ const t =
         f1: {
           title: 'Per-paper badges',
           desc: 'Citation counts (OpenAlex), links to OA full text, and DOIs on every publication. Hover to see the source and retrieval date.',
+          hintLabel: 'DOI candidate',
         },
         f2: {
           title: 'Summary card',
@@ -69,17 +71,27 @@ const t =
       <!-- 1. 論文バッジ -->
       <div class="card">
         <div class="visual">
-          <div class="badge-row">
-            <span class="kl-glyph" aria-hidden="true">
-              <svg width="12" height="12" viewBox="0 0 12 12">
-                <circle cx="5" cy="5" r="3.4" fill="none" stroke="#98a2b3" stroke-width="1.5"></circle>
-                <line x1="7.8" y1="7.8" x2="10.6" y2="10.6" stroke="#98a2b3" stroke-width="1.6" stroke-linecap="round"></line>
-              </svg>
-            </span>
-            <span class="kl-pill kl-cite">❝ 27</span>
-            <span class="kl-pill kl-oa">OA</span>
-            <span class="kl-pill kl-doi">DOI</span>
-            <span class="kl-pill kl-hint">✎ DOI</span>
+          <div class="badge-stack">
+            <div class="badge-row">
+              <span class="kl-glyph" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                  <circle cx="5" cy="5" r="3.4" fill="none" stroke="#98a2b3" stroke-width="1.5"></circle>
+                  <line x1="7.8" y1="7.8" x2="10.6" y2="10.6" stroke="#98a2b3" stroke-width="1.6" stroke-linecap="round"></line>
+                </svg>
+              </span>
+              <span class="kl-pill kl-cite">❝ 27</span>
+              <span class="kl-pill kl-oa">OA</span>
+              <span class="kl-pill kl-doi">DOI</span>
+            </div>
+            <div class="badge-row">
+              <span class="kl-glyph" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                  <circle cx="5" cy="5" r="3.4" fill="none" stroke="#98a2b3" stroke-width="1.5"></circle>
+                  <line x1="7.8" y1="7.8" x2="10.6" y2="10.6" stroke="#98a2b3" stroke-width="1.6" stroke-linecap="round"></line>
+                </svg>
+              </span>
+              <span class="kl-pill kl-hint">✎ {t.f1.hintLabel}</span>
+            </div>
           </div>
         </div>
         <h3>{t.f1.title}</h3>
@@ -183,6 +195,12 @@ const t =
   }
 
   /* バッジ行 */
+  .badge-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
   .badge-row {
     display: flex;
     align-items: center;

@@ -69,4 +69,13 @@ export class SummaryModel {
   startRefresh(): void {
     this.set({ refreshing: true, enrichComplete: false });
   }
+
+  /**
+   * 再取得が失敗したが表示中のデータを保持する場合に呼ぶ
+   * (refreshing は setPublications/setUnavailable でしか解除されないため、
+   * 保持だけだと ↻ が disabled のまま残る)
+   */
+  endRefresh(): void {
+    this.set({ refreshing: false, enrichComplete: true });
+  }
 }

@@ -83,9 +83,13 @@ export function Glyph(ctx: GlyphContext) {
   })();
 
   const copyDoi = async (doi: string) => {
-    await navigator.clipboard.writeText(doi);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    try {
+      await navigator.clipboard.writeText(doi);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // 権限拒否等。「コピーしました」を出さなければユーザーは手動選択に進める
+    }
   };
 
   return (
@@ -96,16 +100,19 @@ export function Glyph(ctx: GlyphContext) {
         aria-label={t('glyph_aria')}
         aria-expanded={open}
         aria-haspopup="dialog"
-        title={noData ? t('glyph_nodata_tooltip') : undefined}
+        title={noData ? t('glyph_nodata_tooltip') : isError ? t('popover_error') : undefined}
         onClick={() => setOpen((v) => !v)}
-        className={`inline-flex h-5 w-5 -my-0.5 items-center justify-center rounded-full border-0 bg-transparent p-0
+        // 控えめさは opacity ではなく色で出す — opacity-55 は実効 1.62:1 で
+        // 非テキストコントラスト 3:1 (WCAG 1.4.11) を割り、ロービジョンには
+        // 存在自体が知覚できない。text-ink-soft (#667085) は白上 4.97:1
+        className="inline-flex h-5 w-5 -my-0.5 items-center justify-center rounded-full border-0 bg-transparent p-0
           cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-focus-ring
-          ${isError ? 'opacity-35' : 'opacity-55 hover:opacity-90'}`}
+          text-ink-soft hover:text-ink"
       >
         {/* レンズグリフ (ブランドロゴの 12px 線画版) */}
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-          <circle cx="5" cy="5" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-faint" />
-          <line x1="7.8" y1="7.8" x2="10.6" y2="10.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" className="text-ink-faint" />
+          <circle cx="5" cy="5" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          <line x1="7.8" y1="7.8" x2="10.6" y2="10.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
       </button>
 
@@ -128,7 +135,7 @@ export function Glyph(ctx: GlyphContext) {
               {enr.citedByCount !== null && !(enr.isXpac && enr.citedByCount === 0)
                 ? enr.citedByCount === 0
                   ? t('popover_cite_zero', { source: sourceName })
-                  : t('badge_cite_label', { n: enr.citedByCount })
+                  : t('popover_cite', { n: enr.citedByCount, source: sourceName })
                 : t('popover_cite_unavailable')}
               {enr.isOa !== null && <> / OA: {enr.isOa ? '✓' : '—'}</>}
               {state.fetchedAt && (
@@ -204,7 +211,7 @@ export function Glyph(ctx: GlyphContext) {
 
           <div className="mt-1.5 border-t border-border-default pt-1.5 text-2xs text-ink-soft">
             {t('credit_data')}
-            {' ｜ '}
+            {t('sep_credit')}
             <a
               className="text-2xs text-ink-soft underline"
               href={buildReportUrl(ctx)}

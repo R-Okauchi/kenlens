@@ -14,6 +14,8 @@ export const TTL = {
   title: 30 * 24 * 60 * 60 * 1000,
   /** 整備レポート (著者推定 + 著者の全論文) */
   report: 24 * 60 * 60 * 1000,
+  /** 整備レポートの突合用: MISC・書籍・講演のタイトル/DOI 索引 */
+  rmOther: 24 * 60 * 60 * 1000,
 } as const;
 
 const PREFIX = 'kl:cache:';

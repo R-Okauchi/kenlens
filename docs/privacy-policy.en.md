@@ -17,21 +17,22 @@ KenLens does none of the following:
 
 ## 2. Data sent off your browser
 
-Only the minimum needed to render the overlay is sent, and only to the following public/academic APIs, solely to process the researchmap page you are viewing.
+Only the minimum needed to run the extension is sent or requested, and only to the following public/academic APIs and static configuration host.
 
 | Destination | Data sent | Purpose |
 | --- | --- | --- |
-| `api.researchmap.jp` | The permalink (URL slug) of the researcher page you are viewing | Fetch the public publication list (`GET /{permalink}/published_papers?limit=1000&start=N`) |
+| `api.researchmap.jp` | The permalink (URL slug) of the researcher page you are viewing. The maintenance report sends the same permalink only | Fetch public works. In the maintenance report, fetch public lists of published papers, MISC items, books and other works, and presentations or talks for matching |
 | `api.openalex.org` | Publication DOIs (plus your optional OpenAlex API key, if configured); in the maintenance report, the OpenAlex author-record ID derived from those DOIs | Fetch citation counts and OA status (`GET /works/doi:{DOI}`), and author-works listing for the maintenance report |
-| `api.crossref.org` | Publication DOIs; for Latin-script publications without a DOI: title, publication year, and first author's family name | Citation-count fallback and DOI-candidate matching (`query.bibliographic`) |
+| `api.crossref.org` | Publication DOIs; for Latin-script papers without a DOI: the paper title and the developer's contact email address only | Citation-count fallback and DOI-candidate matching (`query.bibliographic=title`, `mailto=contact`) |
 | `api.unpaywall.org` | Publication DOIs | OA status (only on the Crossref fallback path) |
-| `r-okauchi.github.io` | Nothing (a static `config.json` is fetched) | Remote operational flag used to disable external-API mode in case of an incident. Checked once a day and on install |
+| `r-okauchi.github.io` | No personal information or browsing information is included (a static `config.json` is fetched) | Operational configuration used to disable researchmap API usage. Checked about once a day |
 
 Notes:
 
-- Title matching applies only to Latin-script titles, and only bibliographic data already public on the page (title, year, first author family name) is sent.
+- Crossref title matching applies only to Latin-script titles. Crossref receives only the paper title and the developer's contact email address. Publication year and author family name are used only for matching inside your browser and are not sent to Crossref.
 - BibTeX files pasted into or selected in the maintenance report are processed entirely inside your browser and never transmitted.
 - Requests to Crossref and Unpaywall include the **developer's** contact email address as a parameter, per those APIs' "polite pool" guidelines. Your email address is never sent.
+- The remote configuration fetch is a once-daily request for a static file on the developer's GitHub Pages site. The request contains no personal information or browsing information.
 - All of the above is public bibliographic metadata from researchmap — none of it is information about you.
 - Requests are self-throttled per host (researchmap: 1 request/second, single concurrency; others similarly limited).
 
@@ -70,6 +71,7 @@ Uninstalling the extension removes all of this data via the browser.
 | `https://api.openalex.org/*` | Fetch citation counts and OA status |
 | `https://api.crossref.org/*` | Citation-count fallback and DOI-candidate matching |
 | `https://api.unpaywall.org/*` | OA-status fallback |
+| `https://r-okauchi.github.io/*` | Fetch operational configuration used to disable researchmap API usage |
 
 The content script runs only on `https://researchmap.jp/*`. The extension does nothing on any other site and cannot read other pages. Choosing the "Page data only" mode in Settings makes no connections to external databases at all.
 

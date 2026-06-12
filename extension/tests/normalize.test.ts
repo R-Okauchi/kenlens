@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   normalizeListResponse,
   normalizePaper,
+  normalizeTitleDoiList,
   type RmListResponse,
   type RmPaperRaw,
 } from '../lib/researchmap/normalize';
@@ -81,5 +82,58 @@ describe('normalizePaper: エッジケース', () => {
       see_also: [{ label: 'doi', '@id': 'https://doi.org/10.1234/ABC' }],
     });
     expect(p!.dois).toEqual(['10.1234/abc']);
+  });
+});
+
+describe('normalizeTitleDoiList (misc / books_etc / presentations)', () => {
+  it('カテゴリごとのタイトルフィールドから ja/en を集める', () => {
+    const { titles, rawCount } = normalizeTitleDoiList(
+      {
+        items: [
+          { paper_title: { ja: '架空の解説記事', en: 'Fictitious Review Article' } },
+          { paper_title: { ja: '  ' } }, // 空白のみは捨てる
+        ],
+      },
+      'misc',
+    );
+    expect(titles).toEqual(['架空の解説記事', 'Fictitious Review Article']);
+    expect(rawCount).toBe(2);
+  });
+
+  it('book_title / presentation_title も同様に拾う', () => {
+    expect(
+      normalizeTitleDoiList({ items: [{ book_title: { ja: '架空の教科書' } }] }, 'books_etc')
+        .titles,
+    ).toEqual(['架空の教科書']);
+    expect(
+      normalizeTitleDoiList(
+        { items: [{ presentation_title: { en: 'Fictitious Keynote' } }] },
+        'presentations',
+      ).titles,
+    ).toEqual(['Fictitious Keynote']);
+  });
+
+  it('DOI は identifiers と see_also[label=doi] の和集合を正規化して返す', () => {
+    const { dois } = normalizeTitleDoiList(
+      {
+        items: [
+          {
+            paper_title: { ja: 'x' },
+            identifiers: { doi: ['10.1234/abc', 'not-a-doi'] },
+            see_also: [{ label: 'doi', '@id': 'https://doi.org/10.1234/ABC' }],
+          },
+        ],
+      },
+      'misc',
+    );
+    expect(dois).toEqual(['10.1234/abc']);
+  });
+
+  it('items 欠落・別カテゴリのフィールドは無視する', () => {
+    expect(normalizeTitleDoiList({}, 'misc')).toEqual({ titles: [], dois: [], rawCount: 0 });
+    // misc として読むとき book_title は拾わない
+    expect(
+      normalizeTitleDoiList({ items: [{ book_title: { ja: '架空の教科書' } }] }, 'misc').titles,
+    ).toEqual([]);
   });
 });

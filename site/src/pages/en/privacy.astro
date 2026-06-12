@@ -8,12 +8,14 @@ import Footer from '../../components/Footer.astro';
   lang="en"
   title="Privacy Policy | KenLens — 研レンズ"
   description="Privacy policy for the KenLens Chrome extension: what information is sent, what is stored locally, and what is never collected."
+  path="en/privacy/"
+  alternatePath="privacy/"
 >
   <Header lang="en" path="privacy/" />
   <main>
     <article class="container prose">
       <h1>Privacy Policy</h1>
-      <p class="effective-date">Effective date: June 2026</p>
+      <p class="effective-date">Effective date: June 10, 2026</p>
 
       <p>
         KenLens (研レンズ, "the extension") is a Chrome extension that displays public
@@ -23,8 +25,9 @@ import Footer from '../../components/Footer.astro';
 
       <h2>Information that leaves your browser</h2>
       <p>
-        The extension only communicates with external servers when needed to process
-        the researchmap page you are viewing. Specifically:
+        The extension communicates with external servers only when needed to process
+        the researchmap page you are viewing or to check its operational configuration.
+        Specifically:
       </p>
       <ol>
         <li>
@@ -33,16 +36,26 @@ import Footer from '../../components/Footer.astro';
           publication data.
         </li>
         <li>
-          For each publication, the extension sends the DOI — or, for DOI-less items
-          with Latin-script titles, the paper title, publication year, and the first
-          author's family name — to OpenAlex, Crossref, and Unpaywall to fetch public
-          metadata (citation counts, OA status, DOI candidates, and so on).
+          For each publication, the extension sends the DOI to OpenAlex, Crossref,
+          and Unpaywall to fetch public metadata such as citation counts and OA
+          status. For DOI-less papers with Latin-script titles, Crossref receives
+          only the paper title and the developer's contact email address for
+          DOI-candidate matching. Publication year and author family name are used
+          only for matching inside your browser and are not sent to Crossref.
         </li>
         <li>
           In the maintenance report, KenLens also queries OpenAlex for the author's
-          works using the OpenAlex author-record ID derived from those DOIs. BibTeX
-          files you paste or select are processed entirely inside your browser and
-          never transmitted.
+          works using the OpenAlex author-record ID derived from those DOIs. It also
+          sends only the researchmap permalink to api.researchmap.jp to fetch public
+          lists of published papers, MISC items, books and other works, and
+          presentations or talks for matching. BibTeX files you paste or select are
+          processed entirely inside your browser and never transmitted.
+        </li>
+        <li>
+          About once a day, the extension fetches an operational configuration file
+          (config.json) from the developer's GitHub Pages site (r-okauchi.github.io).
+          This file is a kill switch for researchmap API usage, and the request
+          contains no personal information or browsing information.
         </li>
       </ol>
       <p>

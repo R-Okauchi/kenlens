@@ -1,9 +1,11 @@
 /**
  * 動作モード解決 + リモート設定 (キルスイッチ)。
  *
- * 優先順位: 設定の明示指定 > リモート killApiMode > researchmap ブレーカ > 既定 'api'。
+ * 優先順位: 設定の dom-only > リモート killApiMode > researchmap ブレーカ > 既定 'api'。
+ * 設定で API モードを「強制」する経路は置かない — キルスイッチを迂回できる
+ * 抜け道になるため (JSON 1 個で全インストールが 24h 以内に DOM-only へ縮退する、
+ * という保証が成り立たなくなる)。
  * リモート設定は静的 JSON (コードではない — CWS のリモートコード禁止に適合)。
- * JST から異議が来た場合、JSON 1 個で全インストールが 24h 以内に DOM-only へ縮退する。
  */
 import { browser } from 'wxt/browser';
 import { REMOTE_CONFIG_URL } from '../constants';
@@ -47,7 +49,9 @@ function setFlags(patch: Partial<FlagsState>): Promise<void> {
 export async function resolveMode(
   settings: Settings,
 ): Promise<{ mode: DataMode; reason: ModeReason }> {
-  if (settings.dataMode === 'api') return { mode: 'api', reason: 'settings' };
+  // 'api' の明示値はここでは特別扱いしない (キルスイッチ迂回の防止)。
+  // UI からは 'auto' / 'dom-only' しか設定できず、'api' は遺物値として
+  // 'auto' と同じ経路 (リモート設定・ブレーカに従う) に落とす
   if (settings.dataMode === 'dom-only') return { mode: 'dom-only', reason: 'settings' };
 
   const flags = await getFlags();

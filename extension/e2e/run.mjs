@@ -350,6 +350,12 @@ try {
     /researchmapに見つからない論文|not found on researchmap|差分は見つかりませんでした|No gaps found/.test(reportBody),
   );
   check('同名混入の注意書きがある', /同名研究者|same name/.test(reportBody));
+  check(
+    '突合対象の開示がある (MISC・書籍まで突合)',
+    /突合対象: researchmap上の論文・MISC・書籍|Compared against papers, misc, and books/.test(
+      reportBody,
+    ),
+  );
 
   // BibTeX 突合 (架空エントリ → 1件解析 → 差分に出る)
   await report

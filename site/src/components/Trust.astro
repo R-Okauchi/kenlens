@@ -8,13 +8,13 @@ const { lang } = Astro.props;
 const t =
   lang === 'ja'
     ? {
-        privacy: '通信は閲覧中のresearchmapページの処理に必要な分だけ。閲覧履歴の収集はありません。',
+        privacy: '通信は閲覧中のresearchmapページの処理に必要な分と、1日1回程度の動作設定の取得のみ。閲覧履歴の収集はありません。',
         privacyLink: 'プライバシーポリシー',
         sources: 'データ: researchmap ・ OpenAlex ・ Crossref ・ Unpaywall (各サービスとは提携していません)',
         oss: 'Apache-2.0 で公開',
       }
     : {
-        privacy: 'Only the requests needed for the researchmap page you are viewing. No browsing history is collected.',
+        privacy: 'Requests are limited to the researchmap page you are viewing and an about once-daily operational-config fetch. No browsing history is collected.',
         privacyLink: 'Privacy policy',
         sources: 'Data: researchmap, OpenAlex, Crossref, Unpaywall (not affiliated with any of them)',
         oss: 'Open source (Apache-2.0)',

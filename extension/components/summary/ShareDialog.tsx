@@ -33,7 +33,27 @@ export function ShareDialog({ metrics, fetchedAt, onClose }: ShareDialogProps) {
   useEffect(() => {
     dialogRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      // aria-modal の宣言どおり Tab をダイアログ内でループさせる
+      // (抜けると SR には「隠された」背景ページを彷徨うことになる)
+      if (e.key === 'Tab' && dialogRef.current) {
+        const buttons = [...dialogRef.current.querySelectorAll<HTMLButtonElement>('button')];
+        if (buttons.length === 0) return;
+        const first = buttons[0]!;
+        const last = buttons[buttons.length - 1]!;
+        const root = dialogRef.current.getRootNode();
+        const active = root instanceof ShadowRoot ? root.activeElement : document.activeElement;
+        if (e.shiftKey && (active === first || active === dialogRef.current)) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     document.addEventListener('keydown', onKey, true);
     return () => document.removeEventListener('keydown', onKey, true);
@@ -89,6 +109,8 @@ export function ShareDialog({ metrics, fetchedAt, onClose }: ShareDialogProps) {
 
         <canvas
           ref={canvasRef}
+          role="img"
+          aria-label={t('share_canvas_alt')}
           className="block w-full rounded-sm border border-border-default"
           style={{ aspectRatio: `${CARD_WIDTH} / ${CARD_HEIGHT}` }}
         />

@@ -22,7 +22,9 @@ const ja = {
 
   // --- バッジ ---
   badge_cite_label: '被引用 {n}件',
+  badge_cite_label_one: '被引用 1件',
   badge_cite_tooltip: '被引用数 {n}件 — {source}・{date}時点',
+  badge_cite_tooltip_one: '被引用数 1件 — {source}・{date}時点',
   badge_oa_label: 'OA',
   badge_oa_tooltip: 'オープンアクセス版があります — クリックで本文へ (Unpaywall / OpenAlex)',
   badge_oa_closed_label: '非OA',
@@ -43,6 +45,7 @@ const ja = {
   popover_match_approx: '≈ タイトル類似で照合 (参考値)',
   popover_match_none:
     '一致するレコードが見つかりませんでした。論文自体の問題ではなく、データベースの収録状況によるものです。',
+  popover_cite: '被引用: {n}件 ({source})',
   popover_cite_zero: '被引用: 0件 ({source})',
   popover_cite_unavailable:
     '被引用データ: なし (JaLC系DOIは外部データベースで集計されていません)',
@@ -77,6 +80,12 @@ const ja = {
   metric_coauthors: 'よく共著する研究者',
   metric_coauthors_etc: 'ほか',
   metric_nodata: '—',
+
+  // --- 区切り記号 (ja は和文約物、en は欧文) ---
+  sep_inline: '・',
+  sep_list: ' ・ ',
+  sep_credit: ' ｜ ',
+
   summary_empty: '公開業績の登録がありません',
   summary_degraded: '限定モード: 表示中のページから算出しています',
   summary_load_all: '全件を読み込む',
@@ -106,6 +115,11 @@ const ja = {
   report_bibtex_error: 'BibTeXを解析できませんでした。形式をご確認ください。',
   report_missing: 'researchmapに見つからない論文: {n}件 (登録済みと判定: {matched}件)',
   report_no_missing: '差分は見つかりませんでした — researchmapはこのソースと同期できています。',
+  report_diff_scope:
+    '突合対象: researchmap上の論文・MISC・書籍。講演・口頭発表とのみ一致した候補には注記を付けています。',
+  report_diff_scope_papers:
+    '突合対象: researchmap上の論文のみ (MISC・書籍・講演は今回取得できませんでした)。',
+  report_presentation_note: '同名の講演・口頭発表が登録済みです (論文としては未登録の可能性があります)',
   report_select_all: 'すべて選択',
   report_select_none: '選択を解除',
   report_download_rm: '選択した{n}件をresearchmapインポート用ファイルで保存',
@@ -121,6 +135,7 @@ const ja = {
   // --- 共有カード ---
   share_open: '画像で共有',
   share_dialog_title: '共有カード',
+  share_canvas_alt: '業績サマリーカードのプレビュー画像 (数値は下のカード本体と同じ)',
   share_copy: '画像をコピー',
   share_copied: 'コピーしました',
   share_copy_failed: 'コピーできませんでした。「PNGを保存」をお使いください。',
@@ -134,8 +149,7 @@ const ja = {
   credit_data: DATA_CREDITS.ja,
   credit_rm: POWERED_BY.label,
   error_api: '外部データベースに接続できませんでした。',
-  error_retry: '再試行',
-  degraded_metric: '外部データベース未接続のため表示していません',
+  degraded_metric: '外部データベースで判定できた論文がありません',
 
   // --- Options ---
   options_title: '研レンズ 設定',
@@ -183,7 +197,9 @@ const en: Messages = {
   app_desc: APP_DESC.en,
 
   badge_cite_label: '{n} citations',
+  badge_cite_label_one: '1 citation',
   badge_cite_tooltip: '{n} citations — {source}, as of {date}',
+  badge_cite_tooltip_one: '1 citation — {source}, as of {date}',
   badge_oa_label: 'OA',
   badge_oa_tooltip: 'Open access version available — click to read (Unpaywall / OpenAlex)',
   badge_oa_closed_label: 'Closed',
@@ -203,6 +219,7 @@ const en: Messages = {
   popover_match_approx: '≈ Matched by title similarity (approximate)',
   popover_match_none:
     'No matching record was found. This reflects database coverage, not the quality of the work.',
+  popover_cite: 'Citations: {n} ({source})',
   popover_cite_zero: 'Citations: 0 ({source})',
   popover_cite_unavailable:
     'Citation data: not available (JaLC DOIs are not tracked by external databases)',
@@ -236,6 +253,11 @@ const en: Messages = {
   metric_coauthors: 'Frequent co-authors',
   metric_coauthors_etc: 'et al.',
   metric_nodata: '—',
+
+  sep_inline: ', ',
+  sep_list: ', ',
+  sep_credit: ' | ',
+
   summary_empty: 'No public publications registered',
   summary_degraded: 'Limited mode: computed from the visible page',
   summary_load_all: 'Load all',
@@ -265,6 +287,12 @@ const en: Messages = {
   report_bibtex_error: 'Could not parse the BibTeX. Please check the format.',
   report_missing: 'Papers not found on researchmap: {n} (judged already registered: {matched})',
   report_no_missing: 'No gaps found — researchmap is in sync with this source.',
+  report_diff_scope:
+    'Compared against papers, misc, and books on researchmap. Candidates matching only a presentation are annotated.',
+  report_diff_scope_papers:
+    'Compared against papers on researchmap only (misc, books, and presentations could not be fetched this time).',
+  report_presentation_note:
+    'A presentation with the same title is registered (it may still be unregistered as a paper)',
   report_select_all: 'Select all',
   report_select_none: 'Clear selection',
   report_download_rm: 'Save {n} selected as a researchmap import file',
@@ -279,6 +307,7 @@ const en: Messages = {
 
   share_open: 'Share as image',
   share_dialog_title: 'Share card',
+  share_canvas_alt: 'Preview image of the summary card (same numbers as the card above)',
   share_copy: 'Copy image',
   share_copied: 'Copied',
   share_copy_failed: 'Could not copy. Please use "Save PNG".',
@@ -291,8 +320,7 @@ const en: Messages = {
   credit_data: DATA_CREDITS.en,
   credit_rm: POWERED_BY.label,
   error_api: 'Could not reach external databases.',
-  error_retry: 'Retry',
-  degraded_metric: 'Not shown (external databases not connected)',
+  degraded_metric: 'No works could be resolved in external databases',
 
   options_title: 'KenLens Settings',
   options_section_display: 'Display',

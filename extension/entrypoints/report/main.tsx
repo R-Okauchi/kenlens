@@ -7,18 +7,19 @@
  * - エラー・データなしは neutral gray の文章のみ。赤・橙・黄は使わない
  * - 件数は必ず分母 (照合済み件数) と出典・取得時点を併記する
  */
-import { useEffect, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import { Logo } from '@/components/common/Logo';
 import { LocaleContext, useI18n, type Locale } from '@/lib/i18n';
 import { getSettings } from '@/lib/settings/settings';
 import { sendMessage } from '@/lib/messaging/protocol';
-import type { Publication } from '@/lib/researchmap/types';
+import type { Publication, RmOtherWorks } from '@/lib/researchmap/types';
 import type { AuthorWorksResult, ReportCandidate } from '@/lib/report/types';
 import { diffAgainstResearchmap, type DiffResult } from '@/lib/report/diff';
 import { candidatesFromBibtex, generateBibtex } from '@/lib/report/bibtex';
 import { generateRmImportJsonl } from '@/lib/report/rmImport';
+import { normalizeTitle } from '@/lib/enrich/match';
 
 /** researchmap permalink の許容文字 (URL パス断片としてそのまま埋め込むため厳格に) */
 const PERMALINK_RE = /^[A-Za-z0-9._-]+$/;
@@ -61,41 +62,53 @@ function downloadRmImport(selected: ReportCandidate[]) {
   download(jsonl, 'application/json', 'kenlens-researchmap-import.jsonl');
 }
 
+function candidateKey(c: ReportCandidate): string {
+  return c.doi ?? `t:${normalizeTitle(c.title)}`;
+}
+
 function CandidateList({ diff }: { diff: DiffResult }) {
   const { t } = useI18n();
   // デフォルトは全件未選択 — 本人が内容を確認して 1 件ずつオプトインする
-  const [selected, setSelected] = useState<ReadonlySet<number>>(new Set());
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
 
   if (diff.missing.length === 0) {
     return (
-      <p aria-live="polite" className="m-0 mt-4 text-md">
-        {t('report_no_missing')}
-      </p>
+      <div className="mt-4">
+        <p aria-live="polite" className="m-0 text-md">
+          {t('report_no_missing')}
+        </p>
+        <p className="kl-dark-soft m-0 mt-1 text-sm text-ink-soft">
+          {t(diff.comparedOtherWorks ? 'report_diff_scope' : 'report_diff_scope_papers')}
+        </p>
+      </div>
     );
   }
 
-  const toggle = (i: number) => {
+  const toggle = (key: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(i)) next.delete(i);
-      else next.add(i);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };
 
-  const selectedCandidates = diff.missing.filter((_, i) => selected.has(i));
+  const selectedCandidates = diff.missing.filter((c) => selected.has(candidateKey(c)));
 
   return (
     <div className="mt-4">
       <p aria-live="polite" className="m-0 text-md font-medium">
         {t('report_missing', { n: diff.missing.length, matched: diff.matchedCount })}
       </p>
+      <p className="kl-dark-soft m-0 mt-1 text-sm text-ink-soft">
+        {t(diff.comparedOtherWorks ? 'report_diff_scope' : 'report_diff_scope_papers')}
+      </p>
 
       <div className="mt-2 flex gap-2">
         <button
           type="button"
           className={secondaryButtonClass}
-          onClick={() => setSelected(new Set(diff.missing.map((_, i) => i)))}
+          onClick={() => setSelected(new Set(diff.missing.map(candidateKey)))}
         >
           {t('report_select_all')}
         </button>
@@ -109,38 +122,48 @@ function CandidateList({ diff }: { diff: DiffResult }) {
       </div>
 
       <ul className="kl-dark-border m-0 mt-3 list-none rounded-md border border-border-default p-0">
-        {diff.missing.map((c, i) => (
-          <li
-            key={c.doi ?? `t:${c.title}:${i}`}
-            className="kl-dark-border border-t border-border-default first:border-t-0"
-          >
-            {/* label で行全体を包み、行クリック / キーボードどちらでも操作できるようにする */}
-            <label className="flex cursor-pointer items-start gap-3 px-3 py-2 focus-within:ring-2 focus-within:ring-inset focus-within:ring-focus-ring">
-              <input
-                type="checkbox"
-                checked={selected.has(i)}
-                onChange={() => toggle(i)}
-                className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-brand"
-              />
-              <span className="min-w-0 text-md">
-                <span className="kl-dark-soft mr-2 text-sm text-ink-soft">
-                  <span className="sr-only">{t('report_col_year')}: </span>
-                  {c.year ?? t('metric_nodata')}
-                </span>
-                <span className="font-medium">
-                  <span className="sr-only">{t('report_col_title')}: </span>
-                  {c.title}
-                </span>
-                {c.venue && (
-                  <span className="kl-dark-soft block text-sm text-ink-soft">
-                    <span className="sr-only">{t('report_col_venue')}: </span>
-                    {c.venue}
+        {diff.missing.map((c) => {
+          const key = candidateKey(c);
+          return (
+            <li
+              key={key}
+              className="kl-dark-border border-t border-border-default first:border-t-0"
+            >
+              {/* label で行全体を包み、行クリック / キーボードどちらでも操作できるようにする */}
+              <label className="flex cursor-pointer items-start gap-3 px-3 py-2 focus-within:ring-2 focus-within:ring-inset focus-within:ring-focus-ring">
+                <input
+                  type="checkbox"
+                  checked={selected.has(key)}
+                  onChange={() => toggle(key)}
+                  className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-brand"
+                />
+                <span className="min-w-0 text-md">
+                  <span className="kl-dark-soft mr-2 text-sm text-ink-soft">
+                    <span className="sr-only">{t('report_col_year')}: </span>
+                    {c.year ?? t('metric_nodata')}
                   </span>
-                )}
-              </span>
-            </label>
-          </li>
-        ))}
+                  <span className="font-medium">
+                    <span className="sr-only">{t('report_col_title')}: </span>
+                    {c.title}
+                  </span>
+                  {c.venue && (
+                    <span className="kl-dark-soft block text-sm text-ink-soft">
+                      <span className="sr-only">{t('report_col_venue')}: </span>
+                      {c.venue}
+                    </span>
+                  )}
+                  {c.presentationMatch && (
+                    // 講演として登録済みでも論文としては未登録の可能性が残るため、
+                    // 除外せず中立な注記のみ付ける
+                    <span className="kl-dark-soft block text-sm text-ink-soft">
+                      {t('report_presentation_note')}
+                    </span>
+                  )}
+                </span>
+              </label>
+            </li>
+          );
+        })}
       </ul>
 
       <div className="mt-3">
@@ -183,14 +206,16 @@ type AuthorState =
   | { kind: 'running' }
   | { kind: 'none' } // 推定不能 (null) — 中立に案内し BibTeX 突合へ誘導
   | { kind: 'error' } // 接続失敗 — neutral gray (赤は使わない)
-  | { kind: 'done'; result: AuthorWorksResult; diff: DiffResult };
+  | { kind: 'done'; result: AuthorWorksResult };
 
 function OpenAlexSection({
   permalink,
   papers,
+  others,
 }: {
   permalink: string;
   papers: Publication[];
+  others: RmOtherWorks | null;
 }) {
   const { t } = useI18n();
   const [state, setState] = useState<AuthorState>({ kind: 'running' });
@@ -201,15 +226,7 @@ function OpenAlexSection({
     sendMessage('buildAuthorReport', { permalink }).then(
       (res) => {
         if (cancelled) return;
-        if (!res) {
-          setState({ kind: 'none' });
-          return;
-        }
-        setState({
-          kind: 'done',
-          result: res,
-          diff: diffAgainstResearchmap(res.candidates, papers),
-        });
+        setState(res ? { kind: 'done', result: res } : { kind: 'none' });
       },
       () => {
         if (!cancelled) setState({ kind: 'error' });
@@ -218,7 +235,17 @@ function OpenAlexSection({
     return () => {
       cancelled = true;
     };
-  }, [permalink, papers]);
+  }, [permalink]);
+
+  // 突合は memo で再計算する — 著者推定 (最大1分) の後から others が
+  // 届いても再フェッチせず差分だけ更新される
+  const diff = useMemo(
+    () =>
+      state.kind === 'done'
+        ? diffAgainstResearchmap(state.result.candidates, papers, others)
+        : null,
+    [state, papers, others],
+  );
 
   return (
     <section className="kl-page-card mt-4 rounded-lg border border-border-default bg-surface p-6 shadow-card">
@@ -241,7 +268,7 @@ function OpenAlexSection({
         <p className="kl-dark-soft mt-3 mb-0 text-md text-ink-soft">{t('error_api')}</p>
       )}
 
-      {state.kind === 'done' && (
+      {state.kind === 'done' && diff && (
         <>
           <p className="mt-3 mb-0 text-md">
             {t('report_author_found', {
@@ -254,7 +281,7 @@ function OpenAlexSection({
           <p className="kl-dark-soft mt-1 mb-0 text-sm text-ink-soft">
             {t('report_author_caution')}
           </p>
-          <CandidateList diff={state.diff} />
+          <CandidateList diff={diff} />
         </>
       )}
     </section>
@@ -270,7 +297,13 @@ type BibtexState =
 
 let bibtexParseSeq = 0;
 
-function BibtexSection({ papers }: { papers: Publication[] }) {
+function BibtexSection({
+  papers,
+  others,
+}: {
+  papers: Publication[];
+  others: RmOtherWorks | null;
+}) {
   const { t } = useI18n();
   const [text, setText] = useState('');
   const [state, setState] = useState<BibtexState>({ kind: 'idle' });
@@ -293,7 +326,7 @@ function BibtexSection({ papers }: { papers: Publication[] }) {
         setState({
           kind: 'parsed',
           count: candidates.length,
-          diff: diffAgainstResearchmap(candidates, papers),
+          diff: diffAgainstResearchmap(candidates, papers, others),
           id: bibtexParseSeq,
         });
       } catch {
@@ -301,7 +334,7 @@ function BibtexSection({ papers }: { papers: Publication[] }) {
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [text, papers]);
+  }, [text, papers, others]);
 
   const onFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -362,10 +395,18 @@ type PubState =
 function ReportPage({ permalink }: { permalink: string | null }) {
   const { t, formatDate } = useI18n();
   const [pub, setPub] = useState<PubState>({ kind: 'loading' });
+  // MISC・書籍・講演の索引。取得失敗は null のまま = 論文のみ突合に劣化
+  const [others, setOthers] = useState<RmOtherWorks | null>(null);
 
   useEffect(() => {
     if (!permalink) return;
     let cancelled = false;
+    sendMessage('getOtherWorks', { permalink }).then(
+      (res) => {
+        if (!cancelled && res) setOthers(res);
+      },
+      () => {},
+    );
     sendMessage('getPublications', { permalink }).then(
       (res) => {
         if (cancelled) return;
@@ -447,15 +488,15 @@ function ReportPage({ permalink }: { permalink: string | null }) {
       {/* 突合セクションは researchmap 側のデータが揃ってから */}
       {pub.kind === 'ready' && (
         <>
-          <OpenAlexSection permalink={permalink} papers={pub.papers} />
-          <BibtexSection papers={pub.papers} />
+          <OpenAlexSection permalink={permalink} papers={pub.papers} others={others} />
+          <BibtexSection papers={pub.papers} others={others} />
         </>
       )}
 
       <footer className="kl-dark-soft mt-6 px-1 text-2xs text-ink-soft">
         <p className="m-0">{t('disclaimer')}</p>
         <p className="m-0 mt-1">
-          {t('credit_rm')} ｜ {t('credit_data')}
+          {t('credit_rm')}{t('sep_credit')}{t('credit_data')}
         </p>
       </footer>
     </main>

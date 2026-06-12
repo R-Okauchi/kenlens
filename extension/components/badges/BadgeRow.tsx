@@ -70,11 +70,20 @@ export function BadgeRow({ permalink, rmId, pub, store, settings, onRetry }: Bad
       {state.phase === 'ready' && (
         <span className="kl-fade-in inline-flex flex-wrap items-center gap-1.5">
           {showCite && (
-            <Tooltip content={t('badge_cite_tooltip', { n: citableCount!, source: sourceName, date: asOf })}>
+            <Tooltip
+              content={t(
+                citableCount === 1 ? 'badge_cite_tooltip_one' : 'badge_cite_tooltip',
+                { n: citableCount!, source: sourceName, date: asOf },
+              )}
+            >
               {/* Crossref 経路 (openAlexUrl なし) は doi.org へフォールバック — クリック不能な
                   リンク風ボタンを作らない */}
               <Chip
                 tone="cite"
+                ariaLabel={t(
+                  citableCount === 1 ? 'badge_cite_label_one' : 'badge_cite_label',
+                  { n: citableCount! },
+                )}
                 href={
                   enr?.openAlexUrl ??
                   (state.doi ?? state.doiCandidate

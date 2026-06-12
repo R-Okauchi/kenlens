@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { diffAgainstResearchmap } from '../lib/report/diff';
 import type { ReportCandidate } from '../lib/report/types';
-import type { Publication } from '../lib/researchmap/types';
+import type { Publication, RmOtherWorks } from '../lib/researchmap/types';
 
 function pub(over: Partial<Publication>): Publication {
   return {
@@ -146,5 +146,69 @@ describe('diffAgainstResearchmap', () => {
     );
     expect(matchedCount).toBe(3);
     expect(missing.map((c) => c.title)).toEqual(['全く新しい架空の研究ノート']);
+  });
+});
+
+describe('diffAgainstResearchmap: 論文以外の業績との突合', () => {
+  const emptyIndex = { titles: [], dois: [] };
+
+  function others(over: Partial<RmOtherWorks>): RmOtherWorks {
+    return { registered: emptyIndex, presentations: emptyIndex, ...over };
+  }
+
+  it('MISC・書籍のタイトル/DOI に一致する候補は登録済みとして除外する', () => {
+    const { missing, matchedCount } = diffAgainstResearchmap(
+      [
+        cand({ title: '架空のインフラ点検解説 (連載第3回)' }), // misc タイトル一致
+        cand({ doi: '10.5555/book.0001', title: 'Some Chapter With Different Title' }), // 書籍 DOI 一致
+        cand({ title: '真に未登録の架空論文', year: 2025 }),
+      ],
+      [],
+      others({
+        registered: {
+          titles: ['架空のインフラ点検解説 (連載第3回)'],
+          dois: ['10.5555/book.0001'],
+        },
+      }),
+    );
+    expect(matchedCount).toBe(2);
+    expect(missing.map((c) => c.title)).toEqual(['真に未登録の架空論文']);
+  });
+
+  it('講演とのみ一致する候補は除外せず presentationMatch を立てる', () => {
+    const { missing, matchedCount } = diffAgainstResearchmap(
+      [
+        cand({ title: 'Fictitious Conference Talk on Sensing', year: 2024 }),
+        cand({ title: '講演と無関係な架空論文', year: 2023 }),
+      ],
+      [],
+      others({
+        presentations: { titles: ['Fictitious Conference Talk on Sensing'], dois: [] },
+      }),
+    );
+    expect(matchedCount).toBe(0);
+    expect(missing.map((c) => [c.title, c.presentationMatch])).toEqual([
+      ['Fictitious Conference Talk on Sensing', true],
+      ['講演と無関係な架空論文', false],
+    ]);
+  });
+
+  it('論文一致が講演一致より優先される (除外 > 注記)', () => {
+    const { missing, matchedCount } = diffAgainstResearchmap(
+      [cand({ title: 'Dual Registered Fictitious Study' })],
+      [pub({ titleEn: 'Dual Registered Fictitious Study' })],
+      others({
+        presentations: { titles: ['Dual Registered Fictitious Study'], dois: [] },
+      }),
+    );
+    expect(matchedCount).toBe(1);
+    expect(missing).toEqual([]);
+  });
+
+  it('otherWorks 未取得 (null) は論文のみ突合に劣化し comparedOtherWorks=false', () => {
+    const withOthers = diffAgainstResearchmap([cand({ title: 'X 架空' })], [], others({}));
+    const withoutOthers = diffAgainstResearchmap([cand({ title: 'X 架空' })], []);
+    expect(withOthers.comparedOtherWorks).toBe(true);
+    expect(withoutOthers.comparedOtherWorks).toBe(false);
   });
 });

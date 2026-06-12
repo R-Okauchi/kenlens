@@ -101,6 +101,11 @@ export interface AuthorWork {
   authors: string | null;
 }
 
+export interface AuthorWorksResponse {
+  works: AuthorWork[];
+  totalCount: number;
+}
+
 /**
  * 著者の全論文をページング取得 (cursor)。List+Filter のため匿名 $1/日枠を消費する —
  * per-page=200 で最大 5 ページ (=1000 件) に制限する。
@@ -108,10 +113,11 @@ export interface AuthorWork {
 export async function fetchAuthorWorks(
   authorId: string,
   maxPages = 5,
-): Promise<AuthorWork[]> {
+): Promise<AuthorWorksResponse> {
   // authorId は "https://openalex.org/A123..." 形式 — フィルタには ID 部分だけ使う
   const id = authorId.split('/').pop() ?? authorId;
   const works: AuthorWork[] = [];
+  let totalCount: number | null = null;
   let cursor = '*';
 
   for (let page = 0; page < maxPages && cursor; page++) {
@@ -126,8 +132,9 @@ export async function fetchAuthorWorks(
     });
     const json = (await res.json()) as {
       results?: RawWorkFull[];
-      meta?: { next_cursor?: string | null };
+      meta?: { count?: number; next_cursor?: string | null };
     };
+    if (page === 0 && typeof json.meta?.count === 'number') totalCount = json.meta.count;
     for (const raw of json.results ?? []) {
       if (!raw.title) continue;
       // ピアレビューレコード等のノイズ型は除外
@@ -146,7 +153,7 @@ export async function fetchAuthorWorks(
     }
     cursor = json.meta?.next_cursor ?? '';
   }
-  return works;
+  return { works, totalCount: totalCount ?? works.length };
 }
 
 /**

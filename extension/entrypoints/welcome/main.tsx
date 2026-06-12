@@ -73,7 +73,7 @@ function Welcome() {
 
         <p className="kl-dark-soft mt-7 mb-0 text-sm text-ink-soft">🔒 {t('onboard_privacy')}</p>
         <p className="kl-dark-soft mt-2 mb-0 text-2xs text-ink-soft">
-          {t('credit_rm')} ｜ {t('credit_data')}
+          {t('credit_rm')}{t('sep_credit')}{t('credit_data')}
         </p>
       </div>
     </main>

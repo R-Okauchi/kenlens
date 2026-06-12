@@ -8,12 +8,14 @@ import Footer from '../components/Footer.astro';
   lang="ja"
   title="プライバシーポリシー | 研レンズ — KenLens"
   description="Chrome拡張「研レンズ (KenLens)」のプライバシーポリシー。送信される情報、ローカルに保存される情報、収集しない情報について説明します。"
+  path="privacy/"
+  alternatePath="en/privacy/"
 >
   <Header lang="ja" path="privacy/" />
   <main>
     <article class="container prose">
       <h1>プライバシーポリシー</h1>
-      <p class="effective-date">施行日: 2026年6月</p>
+      <p class="effective-date">施行日: 2026年6月10日</p>
 
       <p>
         研レンズ (KenLens、以下「本拡張機能」) は、researchmap.jp の研究者ページ上に
@@ -24,7 +26,7 @@ import Footer from '../components/Footer.astro';
       <h2>ブラウザの外部に送信される情報</h2>
       <p>
         本拡張機能が外部のサーバーと通信するのは、閲覧中のresearchmapページの
-        処理に必要な場合に限られます。具体的には次の2つです。
+        処理に必要な場合と、動作設定を確認する場合です。具体的には次のとおりです。
       </p>
       <ol>
         <li>
@@ -32,14 +34,23 @@ import Footer from '../components/Footer.astro';
           api.researchmap.jp に送信し、公開されている業績データを取得します。
         </li>
         <li>
-          業績のDOI、およびDOIが未登録で欧文タイトルの業績については
-          「タイトル・発行年・第一著者の姓」を、OpenAlex・Crossref・Unpaywall に送信し、
-          公開メタデータ (被引用数・OA状況・DOI候補など) を取得します。
+          業績のDOIを OpenAlex・Crossref・Unpaywall に送信し、被引用数・OA状況などの
+          公開メタデータを取得します。DOIが未登録で欧文タイトルの
+          論文については、Crossrefに論文タイトルと開発者の連絡先メールアドレスのみを
+          送信してDOI候補を照合します。出版年・著者姓はブラウザ内での照合判定にのみ
+          使用し、Crossrefには送信しません。
         </li>
         <li>
           整備レポートでは、上記のDOIから導かれたOpenAlexの著者レコードIDを用いて、
-          OpenAlexに著者の論文一覧を照会します。レポートに貼り付け・選択した
-          BibTeXファイルはブラウザ内でのみ処理され、外部に送信されることはありません。
+          OpenAlexに著者の論文一覧を照会します。また、researchmapのパーマリンクのみを
+          api.researchmap.jp に送信し、公開されている論文・MISC・書籍等・講演/口頭発表の
+          一覧を突合のため取得します。レポートに貼り付け・選択したBibTeXファイルは
+          ブラウザ内でのみ処理され、外部に送信されることはありません。
+        </li>
+        <li>
+          本拡張機能は1日1回程度、開発者のGitHub Pages (r-okauchi.github.io) から
+          動作設定ファイル (config.json) を取得します。これはresearchmap APIの利用を
+          停止するための設定確認で、このリクエストに個人情報・閲覧情報は含まれません。
         </li>
       </ol>
       <p>

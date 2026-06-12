@@ -16,6 +16,8 @@ export interface ReportCandidate {
 /** OpenAlex 著者推定の結果 */
 export interface AuthorInference {
   authorId: string;
+  /** 同一表示名で束ねた OpenAlex 著者 ID。先頭が primary。 */
+  authorIds: string[];
   displayName: string;
   /** OpenAlex 上の総論文数 */
   worksCount: number;

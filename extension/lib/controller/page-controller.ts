@@ -36,6 +36,14 @@ export class PageController {
   private summaryKicked = false;
   /** エンリッチ要求済み DOI (可視アイテム経由とサマリー経由の二重取得を防ぐ) */
   private enrichedDois = new Set<string>();
+  /**
+   * ユーザーが「ページ内データのみ」を選んでいる間 false。
+   * このとき外部データベースへのタイトル照合も行わない (設定文言の遵守)。
+   * キルスイッチ/ブレーカ由来の縮退では true のまま (欧文タイトル照合は稼働)
+   */
+  private externalAllowed = true;
+  /** refreshAll の世代。旧世代の setEnrichComplete がスケルトンを早期解除しないためのガード */
+  private epoch = 0;
 
   constructor(
     private ctx: PageContext,
@@ -110,6 +118,7 @@ export class PageController {
 
   /** サマリーの ↻ ボタンから呼ぶ。キャッシュをバイパスして全体を再計算する */
   async refreshAll(): Promise<void> {
+    this.epoch++;
     this.summary?.startRefresh();
     this.enrichedDois.clear();
     this.loadPromise = this.loadPublications(true);
@@ -125,14 +134,26 @@ export class PageController {
         forceRefresh,
       });
       if (res.source === 'unavailable') {
+        // ↻ 再取得の一時失敗: 取得済みデータがあるなら表示を保持する
+        // (private は保持しない — 非公開化の意思を尊重して unavailable に落とす)
+        if (res.reason === 'error' && this.publications !== null) {
+          this.summary?.endRefresh();
+          return;
+        }
         this.mode = res.reason === 'dom-only' ? 'dom-only' : 'error';
+        this.externalAllowed = !(res.reason === 'dom-only' && res.byUserChoice === true);
         this.summary?.setUnavailable(res.reason);
       } else {
         this.mode = 'api';
+        this.externalAllowed = true;
         this.publications = new Map(res.papers.map((p) => [p.rmId, p]));
         this.summary?.setPublications(res.papers, res.totalItems, res.fetchedAt);
       }
     } catch {
+      if (this.publications !== null) {
+        this.summary?.endRefresh();
+        return;
+      }
       this.mode = 'error';
       this.summary?.setUnavailable('error');
     }
@@ -145,8 +166,10 @@ export class PageController {
   private async enrichRemainingForSummary(): Promise<void> {
     const summary = this.summary;
     if (!summary) return;
+    // ↻ の再入時、旧世代の完了通知が新世代のスケルトンを早期解除しないようにする
+    const epoch = this.epoch;
     if (this.mode !== 'api' || !this.publications) {
-      summary.setEnrichComplete();
+      if (epoch === this.epoch) summary.setEnrichComplete();
       return;
     }
     const remaining: string[] = [];
@@ -169,7 +192,7 @@ export class PageController {
       );
     }
     await Promise.all(jobs);
-    summary.setEnrichComplete();
+    if (epoch === this.epoch) summary.setEnrichComplete();
   }
 
   private async processItems(entries: RegisteredItem[]): Promise<void> {
@@ -210,8 +233,9 @@ export class PageController {
         this.store.update(rmId, { matchStatus: 'unmatched' });
       }
 
-      // DOI なし (または API 不可): 欧文タイトルのみ Crossref 照合の対象にする
-      if (isLatinTitle(item.pub.title)) {
+      // DOI なし (または API 不可): 欧文タイトルのみ Crossref 照合の対象にする。
+      // ユーザーが「ページ内データのみ」を選んでいる場合は照合自体を行わない
+      if (this.externalAllowed && isLatinTitle(item.pub.title)) {
         titleTasks.push({ rmId, item });
       } else {
         this.store.update(rmId, { phase: 'ready' });

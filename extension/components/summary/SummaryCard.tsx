@@ -7,7 +7,7 @@
  * - 全タイルに出典・カバレッジ脚注。分母を隠さない
  * - DOI 未登録は「率を上げろ」ではなく「ここを直せます」の導線にする
  */
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { sendMessage } from '@/lib/messaging/protocol';
 import { useI18n } from '@/lib/i18n';
 import { computeSummary } from '@/lib/metrics/summary';
@@ -61,9 +61,12 @@ function jumpToMissingDoi(ctx: PageContext, missingRmIds: readonly string[]): vo
     );
     const li = link?.closest('li');
     if (li instanceof HTMLElement) {
-      li.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      // reduced-motion ではアニメーションを止め、行の所在表示 (背景色) は残す。
+      // 'auto' でなく 'instant' — ホストページの scroll-behavior:smooth に引きずられない
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      li.scrollIntoView({ block: 'center', behavior: reduce ? 'instant' : 'smooth' });
       const original = li.style.backgroundColor;
-      li.style.transition = 'background-color 1.2s ease-out';
+      if (!reduce) li.style.transition = 'background-color 1.2s ease-out';
       li.style.backgroundColor = '#e6f4f2';
       setTimeout(() => {
         li.style.backgroundColor = original;
@@ -89,6 +92,9 @@ export function SummaryCard({
   );
   const [collapsed, setCollapsed] = useState(collapsedInitially);
   const [shareOpen, setShareOpen] = useState(false);
+  // ダイアログを閉じたとき開いたボタンへフォーカスを戻す (Shadow DOM では
+  // document.activeElement が host を返すため、保存ではなく ref で復帰する)
+  const shareTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     onToggleCollapse(collapsed);
@@ -115,8 +121,13 @@ export function SummaryCard({
             {t('summary_fetched', { date: formatDate(state.fetchedAt) })}
           </span>
         )}
+        {/* 更新中の状態を SR にも伝える (kl-spin は reduced-motion で止まり視覚情報も消えるため) */}
+        <span aria-live="polite" className="sr-only">
+          {state.refreshing ? t('summary_refreshing') : ''}
+        </span>
         {!collapsed && state.phase === 'ready' && metrics && state.enrichComplete && (
           <button
+            ref={shareTriggerRef}
             type="button"
             aria-label={t('share_open')}
             title={t('share_open')}
@@ -131,11 +142,16 @@ export function SummaryCard({
             </svg>
           </button>
         )}
-        {!collapsed && state.phase === 'ready' && (
+        {/* 一時エラーでも ↻ は残す (再試行の導線が消えると実質リロードしか無くなる)。
+            dom-only (キルスイッチ/縮退) と private には出さない — 意図的縮退を尊重 */}
+        {!collapsed &&
+          (state.phase === 'ready' ||
+            (state.phase === 'unavailable' && state.unavailableReason === 'error')) && (
           <button
             type="button"
-            aria-label={t('summary_refresh')}
-            title={t('summary_refresh')}
+            aria-label={state.refreshing ? t('summary_refreshing') : t('summary_refresh')}
+            title={state.refreshing ? t('summary_refreshing') : t('summary_refresh')}
+            aria-busy={state.refreshing}
             disabled={state.refreshing}
             onClick={onRefresh}
             className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm border-0 bg-transparent text-ink-soft outline-none hover:bg-surface-sunken focus-visible:ring-2 focus-visible:ring-focus-ring disabled:cursor-default"
@@ -182,7 +198,10 @@ export function SummaryCard({
         <ShareDialog
           metrics={metrics}
           fetchedAt={state.fetchedAt}
-          onClose={() => setShareOpen(false)}
+          onClose={() => {
+            setShareOpen(false);
+            shareTriggerRef.current?.focus();
+          }}
         />
       )}
 
@@ -206,14 +225,22 @@ export function SummaryCard({
                   footnote={
                     metrics
                       ? metrics.undatedCount > 0
-                        ? `${t('metric_papers_src')}・${t('metric_papers_undated', { n: metrics.undatedCount })}`
+                        ? `${t('metric_papers_src')}${t('sep_inline')}${t('metric_papers_undated', { n: metrics.undatedCount })}`
                         : t('metric_papers_src')
                       : null
                   }
                 />
                 <Tile
                   loading={metrics === null || !state.enrichComplete}
-                  value={metrics ? metrics.citations.total.toLocaleString() : ''}
+                  // 照合 0 件の合計 0 は「実ゼロ」ではなく「データなし」—
+                  // 大きな 0 を出すと xpac ゼロと同じく負の印象を作る
+                  value={
+                    metrics
+                      ? metrics.citations.matched > 0
+                        ? metrics.citations.total.toLocaleString()
+                        : t('metric_nodata')
+                      : ''
+                  }
                   label={t('metric_citations')}
                   footnote={
                     metrics
@@ -254,7 +281,7 @@ export function SummaryCard({
                       ? `${t('metric_doi')} (${Math.round((metrics.doi.count / metrics.doi.total) * 100)}%)`
                       : t('metric_doi')
                   }
-                  footnote={null}
+                  footnote={metrics ? t('metric_doi_src', { total: metrics.doi.total }) : null}
                 />
               </div>
 
@@ -286,7 +313,7 @@ export function SummaryCard({
                   <span className="text-ink-soft">{t('metric_coauthors')}: </span>
                   {metrics.coauthors.map((c, i) => (
                     <span key={c.name}>
-                      {i > 0 && ' ・ '}
+                      {i > 0 && t('sep_list')}
                       <a
                         className="text-doi-text underline"
                         href={`${RESEARCHMAP_ORIGIN}/researchers?q=${encodeURIComponent(c.name)}`}
@@ -314,7 +341,7 @@ export function SummaryCard({
             >
               {t('credit_rm')}
             </a>
-            {' ｜ '}
+            {t('sep_credit')}
             {t('credit_data')}
           </div>
         </div>

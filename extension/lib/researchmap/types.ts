@@ -36,9 +36,34 @@ export interface PublicationsResult {
 export interface PublicationsUnavailable {
   source: 'unavailable';
   reason: 'dom-only' | 'private' | 'error';
+  /**
+   * dom-only がユーザーの明示設定 (「ページ内データのみ」) によるものか。
+   * true のとき content script は外部データベースへの照合も行わない
+   * (設定文言「外部データベースへの接続を行いません」の遵守)。
+   * キルスイッチ/ブレーカ由来の縮退では false (欧文タイトル照合は稼働する)
+   */
+  byUserChoice?: boolean;
 }
 
 export type GetPublicationsResponse = PublicationsResult | PublicationsUnavailable;
+
+/** 整備レポートの突合用: タイトルと DOI だけの軽量索引 */
+export interface TitleDoiIndex {
+  titles: string[];
+  /** 正規化済み DOI */
+  dois: string[];
+}
+
+/**
+ * 論文以外の業績の突合索引。
+ * registered (MISC・書籍) との一致は「登録済み」として候補から除外し、
+ * presentations との一致は除外せず注記に留める — 講演登録と論文登録は
+ * researchmap 上で別の業績であり、論文として未登録の可能性が残るため。
+ */
+export interface RmOtherWorks {
+  registered: TitleDoiIndex;
+  presentations: TitleDoiIndex;
+}
 
 /** DOM 解析で得る 1 論文 (縮退モードの完全データ兼バッジアンカー) */
 export interface DomPublication {

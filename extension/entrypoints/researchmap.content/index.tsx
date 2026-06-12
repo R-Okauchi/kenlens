@@ -25,6 +25,7 @@ const COLLAPSED_KEY = 'kl:summary-collapsed';
 
 interface MountedRow {
   host: HTMLElement;
+  container: HTMLElement;
   remove: () => void;
   render: (s: Settings) => void;
 }
@@ -42,7 +43,7 @@ export default defineContentScript({
 
     // 後からマウントされる行にも常に最新の設定を渡す (watchSettings で更新)
     let currentSettings = await getSettings();
-    const locale = resolveLocale(currentSettings.language, detectPageLocale(document));
+    let currentLocale = resolveLocale(currentSettings.language, detectPageLocale(document));
     const store = new ItemStore();
     const summaryModel = new SummaryModel();
     const controller = new PageController(page, store, summaryModel);
@@ -74,11 +75,11 @@ export default defineContentScript({
           shadowHost.style.display = 'block';
           shadowHost.style.minHeight = '26px';
           shadowHost.style.marginTop = '4px';
-          container.setAttribute('lang', locale);
+          container.setAttribute('lang', currentLocale);
           const root = createRoot(container);
           const render = (s: Settings) =>
             root.render(
-              <LocaleContext.Provider value={locale}>
+              <LocaleContext.Provider value={currentLocale}>
                 <BadgeRow
                   permalink={page.permalink}
                   rmId={rmId}
@@ -92,6 +93,7 @@ export default defineContentScript({
           render(currentSettings);
           mountedRows.set(rmId, {
             host: shadowHost,
+            container,
             remove: () => ui.remove(),
             render,
           });
@@ -109,26 +111,40 @@ export default defineContentScript({
     const mountSummaryIfNeeded = async () => {
       if (summaryUi || summaryMounting || !currentSettings.summaryCard) return;
       summaryMounting = true;
+      let remount = false;
       try {
-        summaryUi = await mountSummaryCard(ctx, page, locale, summaryModel, controller);
+        const mountedLocale = currentLocale;
+        const ui = await mountSummaryCard(ctx, page, mountedLocale, summaryModel, controller);
+        if (!currentSettings.summaryCard) {
+          ui?.remove();
+        } else if (mountedLocale !== currentLocale) {
+          ui?.remove();
+          remount = true;
+        } else {
+          summaryUi = ui;
+        }
       } finally {
         summaryMounting = false;
       }
+      if (remount) void mountSummaryIfNeeded();
     };
 
-    await mountSummaryIfNeeded();
-
-    const stopWatching = watchListItems(document, (items) => {
-      const targets = items.filter(
-        (i) => i.listType === 'published_papers' && i.pub.rmId !== null,
-      );
-      if (targets.length === 0) return;
-      controller.register(targets);
-      for (const item of targets) void mountBadgeRow(item);
-    });
-
     const stopSettingsWatch = watchSettings((next) => {
+      const nextLocale = resolveLocale(next.language, detectPageLocale(document));
+      const localeChanged = nextLocale !== currentLocale;
       currentSettings = next;
+      if (localeChanged) {
+        currentLocale = nextLocale;
+        for (const row of mountedRows.values()) {
+          row.container.setAttribute('lang', currentLocale);
+          row.render(next);
+        }
+        summaryUi?.remove();
+        summaryUi = null;
+        void mountSummaryIfNeeded();
+        return;
+      }
+
       for (const row of mountedRows.values()) row.render(next);
       // サマリーカードの表示設定はマウント/アンマウントで追従する
       if (!next.summaryCard && summaryUi) {
@@ -137,6 +153,24 @@ export default defineContentScript({
       } else if (next.summaryCard && !summaryUi) {
         void mountSummaryIfNeeded();
       }
+    });
+
+    await mountSummaryIfNeeded();
+
+    const stopWatching = watchListItems(document, (items) => {
+      for (const [rmId, row] of mountedRows) {
+        if (!row.host.isConnected) {
+          row.remove();
+          mountedRows.delete(rmId);
+        }
+      }
+
+      const targets = items.filter(
+        (i) => i.listType === 'published_papers' && i.pub.rmId !== null,
+      );
+      if (targets.length === 0) return;
+      controller.register(targets);
+      for (const item of targets) void mountBadgeRow(item);
     });
 
     ctx.onInvalidated(() => {

@@ -150,7 +150,7 @@ function parseEntryAt(text: string, at: number): ParseOutcome | null {
     const { value, next } = parseValue(text, i + 1);
     i = next;
     const name = nameMatch[0].toLowerCase(); // フィールド名は大文字小文字を区別しない
-    fields[name] = cleanValue(value, name === 'title');
+    fields[name] = cleanValue(value);
   }
   return { entry: { type, key, fields }, next: i };
 }
@@ -222,16 +222,75 @@ function scanQuoted(text: string, start: number): number {
 }
 
 /**
- * 値の後処理: 二重括弧 {{...}} の余分な外殻を剥がし、改行/連続空白を 1 個に畳み、
- * title では保護用の波括弧 ({Deep {L}earning}) を除去し、エスケープ (\& \% \_ \{ \} \\) を解除する。
+ * 値の後処理: 二重括弧 {{...}} の余分な外殻を剥がし、LaTeX のアクセント/文字
+ * コマンドを Unicode に戻し、保護用の波括弧とエスケープ (\& \% \_ \{ \} \\) を解除する。
  */
-function cleanValue(raw: string, isTitle: boolean): string {
+function cleanValue(raw: string): string {
   let v = raw;
   while (isWrappedInBraces(v)) v = v.slice(1, -1);
-  if (isTitle) v = stripUnescapedBraces(v);
+  v = decodeLatex(v);
+  v = stripUnescapedBraces(v);
   v = v.replace(/\s+/g, ' ').trim();
   v = v.replace(/\\([&%_{}\\])/g, '$1');
-  return v;
+  return v.normalize('NFC');
+}
+
+const LATEX_CHAR_COMMANDS: Record<string, string> = {
+  ss: 'ß',
+  o: 'ø',
+  O: 'Ø',
+  ae: 'æ',
+  AE: 'Æ',
+  aa: 'å',
+  AA: 'Å',
+  l: 'ł',
+  L: 'Ł',
+  i: 'i',
+  j: 'j',
+};
+
+const LATEX_ACCENTS: Record<string, string> = {
+  '"': '\u0308',
+  "'": '\u0301',
+  '`': '\u0300',
+  '^': '\u0302',
+  '~': '\u0303',
+  '=': '\u0304',
+  '.': '\u0307',
+  u: '\u0306',
+  v: '\u030c',
+  c: '\u0327',
+  H: '\u030b',
+  k: '\u0328',
+  r: '\u030a',
+  b: '\u0331',
+  d: '\u0323',
+};
+
+function decodeLatex(v: string): string {
+  let out = v.replace(
+    /\\(ss|ae|AE|aa|AA|[oOlLij])(?=\{\}|[^A-Za-z]|$)(?:\{\})?/g,
+    (_m, command: string) => LATEX_CHAR_COMMANDS[command] ?? _m,
+  );
+  out = out.replace(
+    /\\(["'`^~=.])\s*(?:\{([^{}])\}|([^{}\\]))/g,
+    (_m, accent: string, braced: string | undefined, bare: string | undefined) =>
+      applyLatexAccent(accent, braced ?? bare ?? ''),
+  );
+  out = out.replace(
+    /\\(u|v|c|H|k|r|b|d)\s*\{([^{}])\}/g,
+    (_m, accent: string, base: string) => applyLatexAccent(accent, base),
+  );
+  out = out.replace(
+    /\\(u|v|c|H|k|r|b|d)\s+([^{}\\\s])/g,
+    (_m, accent: string, base: string) => applyLatexAccent(accent, base),
+  );
+  return out;
+}
+
+function applyLatexAccent(accent: string, base: string): string {
+  const mark = LATEX_ACCENTS[accent];
+  return mark ? `${base}${mark}`.normalize('NFC') : base;
 }
 
 /** 文字列全体が対応の取れた 1 組の {} に包まれているか */

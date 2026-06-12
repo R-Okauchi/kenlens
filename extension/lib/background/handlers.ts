@@ -19,8 +19,13 @@ import {
   PrivateProfileError,
   RmApiBrokenError,
   fetchAllPublications,
+  fetchOtherWorks,
 } from '../researchmap/api';
-import type { GetPublicationsResponse, Publication } from '../researchmap/types';
+import type {
+  GetPublicationsResponse,
+  Publication,
+  RmOtherWorks,
+} from '../researchmap/types';
 import { getSettings } from '../settings/settings';
 
 const ALARM_EVICTION = 'kl-eviction';
@@ -33,17 +38,22 @@ interface RmCacheValue {
 
 /** 同一 permalink の同時要求 (複数タブ) を 1 回の researchmap 取得に束ねる */
 const inflight = new Map<string, Promise<GetPublicationsResponse>>();
+const otherWorksInflight = new Map<string, Promise<RmOtherWorks | null>>();
+const reportInflight = new Map<string, Promise<AuthorWorksResult | null>>();
 
 async function getPublications(
   permalink: string,
   forceRefresh: boolean,
 ): Promise<GetPublicationsResponse> {
-  const settings = await getSettings();
-  const { mode } = await resolveMode(settings);
-  if (mode === 'dom-only') return { source: 'unavailable', reason: 'dom-only' };
-
-  // キルスイッチの到達性保証 (alarm が取りこぼされても日次で必ず確認される)
+  // キルスイッチの到達性保証 (alarm が取りこぼされても日次で必ず確認される)。
+  // dom-only の早期 return より前に置く — 縮退中こそ「解除」を拾う必要がある
   void refreshRemoteConfigIfStale();
+
+  const settings = await getSettings();
+  const { mode, reason } = await resolveMode(settings);
+  if (mode === 'dom-only') {
+    return { source: 'unavailable', reason: 'dom-only', byUserChoice: reason === 'settings' };
+  }
 
   const key = cacheKey('rm', permalink);
   if (!forceRefresh) {
@@ -79,6 +89,18 @@ async function getPublications(
       ) {
         await tripResearchmapBreaker();
       }
+      // 一時エラーで有効なキャッシュが残っているなら、表示を壊すより
+      // キャッシュを返す (↻ 再取得の失敗でページ全体がエラー化するのを防ぐ)。
+      // private はキャッシュ返却しない — 非公開化の意思を上書きするため
+      const cached = await cacheGetWithAge<RmCacheValue>(key, TTL.rm);
+      if (cached) {
+        return {
+          source: 'cache',
+          fetchedAt: cached.fetchedAt,
+          totalItems: cached.value.totalItems,
+          papers: cached.value.papers,
+        };
+      }
       return { source: 'unavailable', reason: 'error' };
     } finally {
       inflight.delete(permalink);
@@ -100,10 +122,22 @@ export function registerBackgroundHandlers(): void {
     getPublications(data.permalink, data.forceRefresh === true),
   );
 
-  onMessage('enrichDois', ({ data }) => enrichDois(data.dois));
+  // ユーザーが「ページ内データのみ」を選んでいる間は外部データベースへの
+  // 照合も行わない (設定文言の遵守)。content script 側でも抑止するが、
+  // 全 fetch の単一窓口である background でも防衛する
+  const externalAllowed = async (): Promise<boolean> => {
+    const { mode, reason } = await resolveMode(await getSettings());
+    return !(mode === 'dom-only' && reason === 'settings');
+  };
 
-  onMessage('resolveTitleDoi', ({ data }) =>
-    resolveTitleDoi(data.title, data.year, data.firstAuthorFamily),
+  onMessage('enrichDois', async ({ data }) =>
+    (await externalAllowed()) ? enrichDois(data.dois) : {},
+  );
+
+  onMessage('resolveTitleDoi', async ({ data }) =>
+    (await externalAllowed())
+      ? resolveTitleDoi(data.title, data.year, data.firstAuthorFamily)
+      : { doi: null, confidence: 0 },
   );
 
   onMessage('getMode', async () => resolveMode(await getSettings()));
@@ -117,15 +151,58 @@ export function registerBackgroundHandlers(): void {
     const cached = await cacheGetWithAge<AuthorWorksResult | null>(key, TTL.report);
     if (cached) return cached.value;
 
-    const pubs = await getPublications(data.permalink, false);
-    if (pubs.source === 'unavailable') return null;
-    const dois = [...new Set(pubs.papers.flatMap((p) => p.dois))];
-    if (dois.length === 0) return null;
+    // 著者推定は ~25 リクエストかかる — 複数タブの同時要求は 1 回に束ねる
+    const existing = reportInflight.get(data.permalink);
+    if (existing) return existing;
 
-    const report = await buildAuthorReport(dois);
-    // 推定失敗 (null) はキャッシュしない — 一時的な API 不調でも 24h 再試行不能になるため
-    if (report !== null) await cacheSet(key, report);
-    return report;
+    const promise = (async (): Promise<AuthorWorksResult | null> => {
+      try {
+        const pubs = await getPublications(data.permalink, false);
+        if (pubs.source === 'unavailable') return null;
+        const dois = [...new Set(pubs.papers.flatMap((p) => p.dois))];
+        if (dois.length === 0) return null;
+
+        const report = await buildAuthorReport(dois);
+        // 推定失敗 (null) はキャッシュしない — 一時的な API 不調でも 24h 再試行不能になるため
+        if (report !== null) await cacheSet(key, report);
+        return report;
+      } finally {
+        reportInflight.delete(data.permalink);
+      }
+    })();
+    reportInflight.set(data.permalink, promise);
+    return promise;
+  });
+
+  onMessage('getOtherWorks', async ({ data }) => {
+    const { mode } = await resolveMode(await getSettings());
+    if (mode === 'dom-only') return null;
+
+    const key = cacheKey('rmOther', data.permalink);
+    const cached = await cacheGetWithAge<RmOtherWorks>(key, TTL.rmOther);
+    if (cached) return cached.value;
+
+    const existing = otherWorksInflight.get(data.permalink);
+    if (existing) return existing;
+
+    const promise = (async (): Promise<RmOtherWorks | null> => {
+      try {
+        const res = await fetchOtherWorks(data.permalink);
+        if (res === null) return null;
+        // 部分失敗 (complete=false) はキャッシュしない — 次回開時に再試行し、
+        // 「MISC・書籍まで突合済み」の表示が痩せた索引で固定されるのを防ぐ
+        if (res.complete) await cacheSet(key, res.works);
+        return res.works;
+      } catch (err) {
+        // 非 JSON 応答 = IP ブロック兆候 → getPublications と同じ 6h 自衛縮退
+        if (err instanceof RmApiBrokenError) await tripResearchmapBreaker();
+        return null;
+      } finally {
+        otherWorksInflight.delete(data.permalink);
+      }
+    })();
+    otherWorksInflight.set(data.permalink, promise);
+    return promise;
   });
 
   onMessage('openReport', ({ data }) => {

@@ -10,6 +10,8 @@ import { resetQueues } from '../lib/net/queue';
 const A = 'https://openalex.org/A100';
 const B = 'https://openalex.org/A200';
 
+type TestAuthor = string | { id: string; displayName: string };
+
 function json(body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status: 200,
@@ -17,10 +19,19 @@ function json(body: unknown): Response {
   });
 }
 
-const authorships = (...ids: string[]) => ({
-  authorships: ids.map((id, i) => ({
-    author: { id, display_name: id === A ? 'Taro Yamada' : `Coauthor ${i}` },
-  })),
+function defaultDisplayName(id: string, i: number): string {
+  if (id === A) return 'Taro Yamada';
+  if (id === B) return 'Hanako Sato';
+  return `Fictional Author ${id.split('/').pop() ?? i}`;
+}
+
+const authorships = (...authors: TestAuthor[]) => ({
+  authorships: authors.map((author, i) => {
+    const id = typeof author === 'string' ? author : author.id;
+    const displayName =
+      typeof author === 'string' ? defaultDisplayName(id, i) : author.displayName;
+    return { author: { id, display_name: displayName } };
+  }),
 });
 
 beforeEach(() => {
@@ -46,6 +57,7 @@ describe('inferAuthor', () => {
     const result = await inferAuthor(['10.1/a', '10.1/b', '10.1/c', '10.1/d', '10.1/e']);
     expect(result).not.toBeNull();
     expect(result!.authorId).toBe(A);
+    expect(result!.authorIds).toEqual([A]);
     expect(result!.displayName).toBe('Taro Yamada');
     expect(result!.votes).toBe(5);
     expect(result!.samples).toBe(5);
@@ -81,6 +93,66 @@ describe('inferAuthor', () => {
     expect(result).not.toBeNull();
     expect(result!.authorId).toBe(A);
     expect(result!.samples).toBe(3); // 有効サンプルは後半 3 件のみ
+  });
+
+  it('同一人物の著者 ID 分裂は表示名グループで推定する', async () => {
+    const splitA = 'https://openalex.org/A900001';
+    const splitB = 'https://openalex.org/A900002';
+    const other = 'https://openalex.org/A900003';
+    const sameName = 'Mira‐ko Lane';
+    const responses = [
+      authorships({ id: splitA, displayName: sameName }),
+      authorships({ id: splitA, displayName: sameName }),
+      authorships({ id: splitA, displayName: sameName }),
+      authorships({ id: splitA, displayName: sameName }),
+      authorships(
+        { id: splitA, displayName: sameName },
+        { id: other, displayName: 'Nira Qovel' },
+      ),
+      authorships({ id: splitB, displayName: sameName }),
+      authorships({ id: splitB, displayName: sameName }),
+      authorships({ id: splitB, displayName: sameName }),
+      authorships({ id: splitB, displayName: sameName }),
+      authorships({ id: other, displayName: 'Nira Qovel' }),
+    ];
+    let call = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => Promise.resolve(json(responses[call++]!))),
+    );
+
+    const result = await inferAuthor([
+      '10.1/a',
+      '10.1/b',
+      '10.1/c',
+      '10.1/d',
+      '10.1/e',
+      '10.1/f',
+      '10.1/g',
+      '10.1/h',
+      '10.1/i',
+      '10.1/j',
+    ]);
+    expect(result).not.toBeNull();
+    expect(result!.authorId).toBe(splitA);
+    expect(result!.authorIds).toEqual([splitA, splitB]);
+    expect(result!.displayName).toBe(sameName);
+    expect(result!.votes).toBe(9);
+    expect(result!.samples).toBe(10);
+  });
+
+  it('同じ work 内の同一著者 ID は 1 票だけ数える', async () => {
+    const responses = [authorships(A, A), authorships(A), authorships(B)];
+    let call = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => Promise.resolve(json(responses[call++]!))),
+    );
+    const result = await inferAuthor(['10.1/a', '10.1/b', '10.1/c']);
+    expect(result).not.toBeNull();
+    expect(result!.authorId).toBe(A);
+    expect(result!.votes).toBe(2);
+    expect(result!.samples).toBe(3);
   });
 
   it('サンプルが少なすぎる場合は推定しない', async () => {
@@ -124,7 +196,7 @@ describe('buildAuthorReport', () => {
                 type: 'article',
               },
             ],
-            meta: { next_cursor: null },
+            meta: { count: 1200, next_cursor: null },
           }),
         );
       }),
@@ -133,7 +205,8 @@ describe('buildAuthorReport', () => {
     const report = await buildAuthorReport(['10.1/a', '10.1/b', '10.1/c']);
     expect(report).not.toBeNull();
     expect(report!.author.authorId).toBe(A);
-    expect(report!.author.worksCount).toBe(2);
+    expect(report!.author.authorIds).toEqual([A]);
+    expect(report!.author.worksCount).toBe(1200);
     expect(report!.candidates).toHaveLength(2);
 
     const [withDoi, withoutDoi] = report!.candidates;

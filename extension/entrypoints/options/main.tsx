@@ -300,7 +300,7 @@ function OptionsPage({
             </a>
           </p>
           <p className="kl-dark-soft m-0 text-2xs text-ink-soft">
-            {t('credit_rm')} ｜ {t('credit_data')}
+            {t('credit_rm')}{t('sep_credit')}{t('credit_data')}
           </p>
           <p className="m-0">
             <span className="inline-block rounded-full bg-brand-soft px-3 py-1 text-sm font-medium text-brand-strong">

@@ -10,7 +10,7 @@
  */
 import { DISCLAIMER, DATA_CREDITS, POWERED_BY } from '@kenlens/shared/disclaimer';
 import type { Locale } from '../i18n';
-import { formatDate } from '../i18n';
+import { formatDate, t } from '../i18n';
 import type { SummaryMetrics } from '../metrics/summary';
 
 export const CARD_WIDTH = 1200;
@@ -76,7 +76,7 @@ export function buildShareCard(
       : `as of ${formatDate(locale, fetchedAtMs)}`,
     tiles,
     disclaimer: `※ ${DISCLAIMER[locale]}`,
-    credit: `${POWERED_BY.label} ｜ ${DATA_CREDITS[locale]}`,
+    credit: `${POWERED_BY.label}${t(locale, 'sep_credit')}${DATA_CREDITS[locale]}`,
   };
 }
 

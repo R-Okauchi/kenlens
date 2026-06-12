@@ -9,6 +9,7 @@ import type {
   EnrichmentRecord,
   GetPublicationsResponse,
   ModeReason,
+  RmOtherWorks,
   TitleResolution,
 } from '../researchmap/types';
 import type { AuthorWorksResult } from '../report/types';
@@ -39,6 +40,12 @@ export interface ProtocolMap {
    * 呼び出し側の純関数で行う)。推定不能・DOM-only モード時は null
    */
   buildAuthorReport(data: { permalink: string }): AuthorWorksResult | null;
+
+  /**
+   * 整備レポートの突合用: MISC・書籍・講演のタイトル/DOI 索引。
+   * 取得不能 (DOM-only 等) は null — diff は論文のみとの突合に劣化する
+   */
+  getOtherWorks(data: { permalink: string }): RmOtherWorks | null;
 
   /** content script からレポートページをタブで開く (CS は拡張ページを直接開けない) */
   openReport(data: { permalink: string }): void;
