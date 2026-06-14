@@ -101,22 +101,57 @@ describe('diffAgainstResearchmap', () => {
     expect(matchedCount).toBe(0);
   });
 
-  it('候補同士の重複は DOI または正規化タイトルで除去する', () => {
+  it('候補同士の重複は DOI または正規化タイトル+年で除去する', () => {
     const { missing, matchedCount } = diffAgainstResearchmap(
       [
         // 同一 DOI (タイトル表記違い)
         cand({ doi: '10.5555/dup.0001', title: 'A Novel Fictitious Method' }),
         cand({ doi: '10.5555/dup.0001', title: 'A novel fictitious method (preprint)' }),
-        // DOI 無し・正規化タイトルが同一
-        cand({ title: 'Bridge Vibration Atlas' }),
-        cand({ title: 'bridge vibration atlas!' }),
+        // DOI 無し・正規化タイトルと年が同一
+        cand({ title: 'Bridge Vibration Atlas', year: 2023 }),
+        cand({ title: 'bridge vibration atlas!', year: 2023 }),
       ],
       [],
     );
     expect(missing).toHaveLength(2);
+    // 年降順ソート: 2023 の Bridge が先、年なしの Novel は末尾
     expect(missing.map((c) => c.title)).toEqual([
-      'A Novel Fictitious Method',
       'Bridge Vibration Atlas',
+      'A Novel Fictitious Method',
+    ]);
+    expect(matchedCount).toBe(0);
+  });
+
+  it('同タイトル・同年の重複は DOI を持つ候補を優先して残す', () => {
+    const { missing, matchedCount } = diffAgainstResearchmap(
+      [
+        cand({ title: 'Fictitious Sensor Fusion Study', year: 2024 }),
+        cand({
+          doi: '10.5555/fusion.2024',
+          title: 'Fictitious Sensor Fusion Study',
+          year: 2024,
+        }),
+      ],
+      [],
+    );
+    expect(missing).toHaveLength(1);
+    expect(missing[0]!.doi).toBe('10.5555/fusion.2024');
+    expect(missing[0]!.title).toBe('Fictitious Sensor Fusion Study');
+    expect(matchedCount).toBe(0);
+  });
+
+  it('同タイトルでも年が異なる候補は別行として残す', () => {
+    const { missing, matchedCount } = diffAgainstResearchmap(
+      [
+        cand({ title: 'Fictitious Coastal Monitoring Study', year: 2023 }),
+        cand({ title: 'Fictitious Coastal Monitoring Study', year: 2024 }),
+      ],
+      [],
+    );
+    expect(missing.map((c) => c.year)).toEqual([2024, 2023]);
+    expect(missing.map((c) => c.title)).toEqual([
+      'Fictitious Coastal Monitoring Study',
+      'Fictitious Coastal Monitoring Study',
     ]);
     expect(matchedCount).toBe(0);
   });

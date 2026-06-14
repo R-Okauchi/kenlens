@@ -45,6 +45,57 @@ function titleMatches(index: TitleIndex, title: string, norm: string): boolean {
   );
 }
 
+function candidateDedupeKeys(c: ReportCandidate): string[] {
+  const norm = normalizeTitle(c.title);
+  const keys: string[] = [];
+  if (c.doi !== null) keys.push(`d:${c.doi}`);
+  if (norm !== '') keys.push(`ty:${norm}|${c.year ?? ''}`);
+  return keys;
+}
+
+function preferCandidate(a: ReportCandidate, b: ReportCandidate): ReportCandidate {
+  return a.doi === null && b.doi !== null ? b : a;
+}
+
+function dedupeCandidates(candidates: readonly ReportCandidate[]): ReportCandidate[] {
+  const kept: Array<ReportCandidate | null> = [];
+  const keyToIndex = new Map<string, number>();
+
+  for (const c of candidates) {
+    const keys = candidateDedupeKeys(c);
+    const indexes = [
+      ...new Set(
+        keys
+          .map((key) => keyToIndex.get(key))
+          .filter((i): i is number => i !== undefined && kept[i] !== null),
+      ),
+    ];
+
+    if (indexes.length === 0) {
+      const index = kept.length;
+      kept.push(c);
+      for (const key of keys) keyToIndex.set(key, index);
+      continue;
+    }
+
+    indexes.sort((a, b) => a - b);
+    const survivorIndex =
+      indexes.find((i) => kept[i]?.doi !== null) ?? indexes[0]!;
+    const survivor = kept[survivorIndex]!;
+    kept[survivorIndex] = preferCandidate(survivor, c);
+
+    for (const loserIndex of indexes) {
+      if (loserIndex !== survivorIndex) kept[loserIndex] = null;
+    }
+    for (const [key, index] of keyToIndex) {
+      if (indexes.includes(index)) keyToIndex.set(key, survivorIndex);
+    }
+    for (const key of keys) keyToIndex.set(key, survivorIndex);
+  }
+
+  return kept.filter((c): c is ReportCandidate => c !== null);
+}
+
 export function diffAgainstResearchmap(
   candidates: readonly ReportCandidate[],
   rmPapers: readonly Publication[],
@@ -67,14 +118,8 @@ export function diffAgainstResearchmap(
 
   const missing: MissingCandidate[] = [];
   let matchedCount = 0;
-  const seen = new Set<string>();
 
-  for (const c of candidates) {
-    // 候補同士の重複も除く (DOI 優先、無ければ正規化タイトル)
-    const dedupeKey = c.doi ?? `t:${normalizeTitle(c.title)}`;
-    if (seen.has(dedupeKey)) continue;
-    seen.add(dedupeKey);
-
+  for (const c of dedupeCandidates(candidates)) {
     if (c.doi && rmDois.has(c.doi)) {
       matchedCount++;
       continue;
