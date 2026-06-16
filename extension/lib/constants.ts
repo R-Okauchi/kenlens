@@ -13,3 +13,9 @@ export const REMOTE_CONFIG_URL = 'https://r-okauchi.github.io/kenlens/config.jso
 export const SAMPLE_PROFILE_URL = 'https://researchmap.jp/p_chun';
 
 export const RESEARCHMAP_ORIGIN = 'https://researchmap.jp';
+
+/** 公開リポジトリ (Star 導線) */
+export const REPO_URL = 'https://github.com/R-Okauchi/kenlens';
+
+/** GitHub Sponsors */
+export const SPONSOR_URL = 'https://github.com/sponsors/R-Okauchi';

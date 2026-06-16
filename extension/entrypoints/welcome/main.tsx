@@ -3,7 +3,7 @@ import { browser } from 'wxt/browser';
 import './style.css';
 import { Logo } from '@/components/common/Logo';
 import { LocaleContext, useI18n, type Locale } from '@/lib/i18n';
-import { SAMPLE_PROFILE_URL } from '@/lib/constants';
+import { REPO_URL, SAMPLE_PROFILE_URL, SPONSOR_URL } from '@/lib/constants';
 
 function Welcome() {
   const { t } = useI18n();
@@ -71,7 +71,42 @@ function Welcome() {
           ))}
         </ol>
 
-        <p className="kl-dark-soft mt-7 mb-0 text-sm text-ink-soft">🔒 {t('onboard_privacy')}</p>
+        {/* 無料・OSS への控えめな応援導線。金銭を前面に出さず、使い方の後に 1 行だけ。
+            ❤ は UI 赤禁止のため絵文字を使わず currentColor=teal の SVG で描く */}
+        <p className="mt-7 mb-0 border-t border-border-default pt-5 text-sm text-ink-soft">
+          {t('support_intro')}{' '}
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-semibold text-brand underline"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+              <path
+                d="M6 1.2l1.4 2.95 3.25.46-2.35 2.27.56 3.22L6 8.58 3.14 10.1l.56-3.22L1.35 4.61l3.25-.46z"
+                fill="currentColor"
+              />
+            </svg>
+            {t('support_star')}
+          </a>
+          {' · '}
+          <a
+            href={SPONSOR_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-semibold text-brand underline"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+              <path
+                d="M6 10.4S1.3 7.6 1.3 4.3a2.4 2.4 0 0 1 4.7-.7 2.4 2.4 0 0 1 4.7.7C10.7 7.6 6 10.4 6 10.4z"
+                fill="currentColor"
+              />
+            </svg>
+            {t('support_sponsor')}
+          </a>
+        </p>
+
+        <p className="kl-dark-soft mt-5 mb-0 text-sm text-ink-soft">🔒 {t('onboard_privacy')}</p>
         <p className="kl-dark-soft mt-2 mb-0 text-2xs text-ink-soft">
           {t('credit_rm')}{t('sep_credit')}{t('credit_data')}
         </p>

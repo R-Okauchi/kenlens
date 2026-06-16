@@ -188,6 +188,9 @@ const ja = {
   onboard_settings_cta: '設定を開く',
   onboard_privacy:
     '閲覧中のresearchmapページの処理に必要な通信以外は行わず、閲覧履歴の収集もありません。',
+  support_intro: '気に入ったら',
+  support_star: 'GitHubでスター',
+  support_sponsor: 'スポンサー',
 } as const;
 
 export type Messages = { [K in keyof typeof ja]: string };
@@ -358,6 +361,9 @@ const en: Messages = {
   onboard_settings_cta: 'Open Settings',
   onboard_privacy:
     'We only make requests needed for the researchmap page you are viewing. No browsing history is collected.',
+  support_intro: 'Enjoying KenLens?',
+  support_star: 'Star on GitHub',
+  support_sponsor: 'Sponsor',
 };
 
 export const messages: Record<Locale, Messages> = { ja, en };

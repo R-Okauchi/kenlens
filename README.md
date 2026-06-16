@@ -1,5 +1,8 @@
 # 研レンズ — KenLens
 
+[![GitHub stars](https://img.shields.io/github/stars/R-Okauchi/kenlens?style=social)](https://github.com/R-Okauchi/kenlens)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%99%A5-0F766E)](https://github.com/sponsors/R-Okauchi)
+
 researchmap の研究者ページに、被引用数・オープンアクセス状況・DOI の情報をその場で表示するブラウザ拡張機能です。
 
 > **研究評価ではなく、公開メタデータの可視化・整備支援です。**

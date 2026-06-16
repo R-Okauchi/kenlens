@@ -26,10 +26,14 @@ const t =
     ? {
         privacy: 'プライバシーポリシー',
         contact: 'お問い合わせ (GitHub Issues)',
+        star: 'GitHubでスター',
+        sponsor: 'スポンサー',
       }
     : {
         privacy: 'Privacy Policy',
         contact: 'Contact (GitHub Issues)',
+        star: 'Star on GitHub',
+        sponsor: 'Sponsor',
       };
 ---
 
@@ -41,6 +45,8 @@ const t =
         {t.contact}
       </a>
       <a href="https://github.com/R-Okauchi/kenlens" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a class="support" href="https://github.com/R-Okauchi/kenlens" target="_blank" rel="noopener noreferrer">★︎ {t.star}</a>
+      <a class="support" href="https://github.com/sponsors/R-Okauchi" target="_blank" rel="noopener noreferrer">♥︎ {t.sponsor}</a>
     </nav>
     <p class="disclaimer">{DISCLAIMER[lang]}</p>
     <p class="credits">{DATA_CREDITS[lang]}</p>
