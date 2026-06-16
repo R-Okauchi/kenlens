@@ -74,7 +74,10 @@ async function getPublications(
   const promise = (async (): Promise<GetPublicationsResponse> => {
     try {
       const { totalItems, papers } = await fetchAllPublications(permalink);
-      await cacheSet<RmCacheValue>(key, { totalItems, papers });
+      // 業績 0 件はキャッシュしない — 「これから登録する」過渡状態であり、
+      // 24h キャッシュすると新規登録ユーザーが論文を足しても最大 24h 出ない。
+      // 0 件取得のたび 1 リクエスト走るが、業績ゼロのページは稀で許容範囲
+      if (totalItems > 0) await cacheSet<RmCacheValue>(key, { totalItems, papers });
       return { source: 'api', fetchedAt: Date.now(), totalItems, papers };
     } catch (err) {
       if (err instanceof PrivateProfileError) {
